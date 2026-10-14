@@ -185,3 +185,44 @@ export interface ClubDailyCardRecord extends RecordModel {
   provocacao: string
   status: ClubCardStatus
 }
+
+export type ModerationStatus = 'pending' | 'approved' | 'rejected'
+
+export interface CommunityTopicRecord extends RecordModel {
+  user: string
+  course?: string
+  title: string
+  content: string
+  status: ModerationStatus
+  moderation_notes?: string
+  moderated_at?: string
+  pinned?: boolean
+  replies_count?: number
+  expand?: {
+    user?: UserRecord
+    course?: CourseRecord
+  }
+}
+
+export interface CommunityReplyRecord extends RecordModel {
+  topic: string
+  user: string
+  content: string
+  status: ModerationStatus
+  moderation_notes?: string
+  moderated_at?: string
+  expand?: {
+    user?: UserRecord
+    topic?: CommunityTopicRecord
+  }
+}
+
+export interface TutorQueryRecord extends RecordModel {
+  user?: string
+  query: string
+  category?: string
+  is_student?: boolean
+  expand?: {
+    user?: UserRecord
+  }
+}

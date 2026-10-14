@@ -8,6 +8,7 @@ import {
   Clock3,
   Flame,
   Lock,
+  MessageSquare,
   Play,
   Search,
   Sparkles,
@@ -120,7 +121,13 @@ export default function StudentDashboard() {
             </h1>
             <p className="mt-2 text-brand-muted">Qual será o seu próximo movimento hoje?</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" className="pill-button">
+              <Link to="/app/comunidade">
+                <MessageSquare className="mr-2 h-4 w-4 text-brand-orange" />
+                Comunidade
+              </Link>
+            </Button>
             <Button asChild variant="outline" className="pill-button">
               <Link to="/app/busca">
                 <Search className="mr-2 h-4 w-4" />

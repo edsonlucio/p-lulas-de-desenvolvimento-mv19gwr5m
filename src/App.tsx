@@ -20,12 +20,14 @@ import VerifyEmail from '@/pages/VerifyEmail'
 import AdminClub from '@/pages/admin/AdminClub'
 import AdminCourses from '@/pages/admin/AdminCourses'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
+import AdminModeration from '@/pages/admin/AdminModeration'
 import AdminOrders from '@/pages/admin/AdminOrders'
 import AdminStudents from '@/pages/admin/AdminStudents'
 import CoursePlayer from '@/pages/student/CoursePlayer'
 import StudentDashboard from '@/pages/student/Dashboard'
 import Profile from '@/pages/student/Profile'
 import SearchLessons from '@/pages/student/SearchLessons'
+import StudentCommunity from '@/pages/student/StudentCommunity'
 
 export default function App() {
   return (
@@ -93,6 +95,14 @@ export default function App() {
                 }
               />
               <Route
+                path="comunidade"
+                element={
+                  <RouteGuard>
+                    <StudentCommunity />
+                  </RouteGuard>
+                }
+              />
+              <Route
                 path="perfil"
                 element={
                   <RouteGuard>
@@ -139,6 +149,14 @@ export default function App() {
                 element={
                   <RouteGuard admin>
                     <AdminClub />
+                  </RouteGuard>
+                }
+              />
+              <Route
+                path="comunidade"
+                element={
+                  <RouteGuard admin>
+                    <AdminModeration />
                   </RouteGuard>
                 }
               />

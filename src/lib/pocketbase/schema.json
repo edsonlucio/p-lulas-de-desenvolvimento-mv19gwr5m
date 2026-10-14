@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T04:09:21.398Z",
+  "generatedAt": "2026-10-14T04:22:02.032Z",
   "collections": [
     {
       "name": "users",
@@ -1163,6 +1163,224 @@
       "indexes": [
         "CREATE INDEX idx_webhook_logs_source ON webhook_logs (source)",
         "CREATE INDEX idx_webhook_logs_created ON webhook_logs (created DESC)"
+      ]
+    },
+    {
+      "name": "community_topics",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id || status = \"approved\")",
+        "view": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id || status = \"approved\")",
+        "create": "@request.auth.id != \"\" && @request.auth.id = @request.body.user && @request.body.status = \"pending\"",
+        "update": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || (user = @request.auth.id && @request.body.status:changed = false))",
+        "delete": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "course",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "courses"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["pending", "approved", "rejected"]
+        },
+        {
+          "name": "moderation_notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "moderated_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "pinned",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "replies_count",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_comm_topics_status ON community_topics (status)",
+        "CREATE INDEX idx_comm_topics_course ON community_topics (course)",
+        "CREATE INDEX idx_comm_topics_user ON community_topics (user)",
+        "CREATE INDEX idx_comm_topics_created ON community_topics (created DESC)"
+      ]
+    },
+    {
+      "name": "community_replies",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id || status = \"approved\")",
+        "view": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id || status = \"approved\")",
+        "create": "@request.auth.id != \"\" && @request.auth.id = @request.body.user && @request.body.status = \"pending\"",
+        "update": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || (user = @request.auth.id && @request.body.status:changed = false))",
+        "delete": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)"
+      },
+      "fields": [
+        {
+          "name": "topic",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "community_topics"
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["pending", "approved", "rejected"]
+        },
+        {
+          "name": "moderation_notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "moderated_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_comm_replies_topic ON community_replies (topic)",
+        "CREATE INDEX idx_comm_replies_status ON community_replies (status)",
+        "CREATE INDEX idx_comm_replies_user ON community_replies (user)",
+        "CREATE INDEX idx_comm_replies_created ON community_replies (created ASC)"
+      ]
+    },
+    {
+      "name": "tutor_queries",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)",
+        "view": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)",
+        "create": null,
+        "update": null,
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "query",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_student",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_tutor_queries_created ON tutor_queries (created DESC)",
+        "CREATE INDEX idx_tutor_queries_user ON tutor_queries (user)"
       ]
     }
   ]

@@ -177,6 +177,20 @@ routerAdd('POST', '/backend/v1/tutor-chat', (e) => {
         'Atenção: Apresente a plataforma, cursos, mentorias de Edson Lúcio e o Clube das Pílulas. Convide-o a se cadastrar (/cadastro). NUNCA revele conteúdo aprofundado ou transcrições de aulas para visitante.\n'
     }
 
+    // Registrar pergunta em tutor_queries para analytics/KPIs de dúvidas do tutor
+    try {
+      const tqCol = $app.findCollectionByNameOrId('tutor_queries')
+      const tqRec = new Record(tqCol)
+      if (isStudent && e.auth?.id) {
+        tqRec.set('user', e.auth.id)
+      }
+      tqRec.set('query', message)
+      tqRec.set('is_student', isStudent)
+      $app.save(tqRec)
+    } catch (saveErr) {
+      console.log('Aviso ao registrar pergunta do tutor:', saveErr.message || saveErr)
+    }
+
     // Mensagem enriquecida com a verificação de segurança/permissão do backend
     const enrichedMessage = contextHeader + '\nPergunta do usuário: ' + message
 

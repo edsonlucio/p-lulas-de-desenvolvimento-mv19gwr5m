@@ -41,6 +41,7 @@ const publicLinks = [
 ]
 const studentLinks = [
   { label: 'Meus cursos', href: '/app' },
+  { label: 'Comunidade', href: '/app/comunidade' },
   { label: 'Buscar', href: '/app/busca' },
   { label: 'Meus pontos', href: '/app/perfil#trilha' },
 ]
@@ -48,6 +49,7 @@ const adminLinks = [
   { label: 'Dashboard', href: '/admin' },
   { label: 'Cursos', href: '/admin/cursos' },
   { label: 'Alunos', href: '/admin/alunos' },
+  { label: 'Moderação', href: '/admin/comunidade' },
   { label: 'Pedidos', href: '/admin/pedidos' },
   { label: 'Clube das Pílulas', href: '/admin/clube' },
 ]

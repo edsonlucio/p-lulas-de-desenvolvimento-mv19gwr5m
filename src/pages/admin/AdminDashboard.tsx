@@ -33,8 +33,10 @@ import type {
   UserRecord,
 } from '@/lib/types'
 import { getAdminSnapshot, listSearches } from '@/services/admin'
+import { getCommunityStats, listTutorQueries } from '@/services/community'
 import { listAllCourses } from '@/services/courses'
 import type { SearchHistoryRecord } from '@/services/search'
+import type { CommunityTopicRecord, TutorQueryRecord } from '@/lib/types'
 
 interface Snapshot {
   users: UserRecord[]
@@ -49,6 +51,13 @@ export default function AdminDashboard() {
   const [courses, setCourses] = useState<CourseRecord[]>([])
   const [allLessons, setAllLessons] = useState<LessonRecord[]>([])
   const [searches, setSearches] = useState<SearchHistoryRecord[]>([])
+  const [communityData, setCommunityData] = useState<{
+    totalTopics: number
+    pendingTopicsCount: number
+    pendingRepliesCount: number
+    mostCommented: CommunityTopicRecord[]
+  } | null>(null)
+  const [tutorQueries, setTutorQueries] = useState<TutorQueryRecord[]>([])
 
   useEffect(() => {
     Promise.all([
@@ -59,11 +68,15 @@ export default function AdminDashboard() {
         filter: 'situacao = "ativo"',
         expand: 'module',
       }),
-    ]).then(([snapshot, records, history, lessons]) => {
+      getCommunityStats().catch(() => null),
+      listTutorQueries().catch(() => []),
+    ]).then(([snapshot, records, history, lessons, commStats, tQueries]) => {
       setData(snapshot)
       setCourses(records)
       setSearches(history.items)
       setAllLessons(lessons)
+      if (commStats) setCommunityData(commStats)
+      if (tQueries) setTutorQueries(tQueries)
     })
   }, [])
   const revenue =
@@ -105,6 +118,43 @@ export default function AdminDashboard() {
       .slice(0, 5)
     return { recent: searches.slice(0, 5), frequent }
   }, [searches])
+
+  // Assuntos mais perguntados ao Tutor Pílulas (Analytics do Tutor IA)
+  const tutorStats = useMemo(() => {
+    if (tutorQueries.length === 0) return { recent: [], frequent: [] }
+
+    // Agrupamento por palavras-chave / temas mais recorrentes
+    const freq = new Map<string, { theme: string; count: number }>()
+    for (const item of tutorQueries) {
+      const q = item.query.toLowerCase().trim()
+      if (!q) continue
+
+      let theme = item.query.trim()
+      if (q.includes('persona')) theme = 'Definição de Persona'
+      else if (q.includes('clube')) theme = 'Clube das Pílulas (Rotina & Metanoia)'
+      else if (q.includes('cac') || q.includes('ltv') || q.includes('métrica'))
+        theme = 'Métricas: CAC, LTV e ROI'
+      else if (q.includes('funil')) theme = 'Funil de Vendas'
+      else if (q.includes('posicionamento') || q.includes('instagram'))
+        theme = 'Posicionamento no Instagram'
+      else if (q.includes('tráfego') || q.includes('anúncio')) theme = 'Tráfego Pago & Campanhas'
+      else if (q.includes('mentoria') || q.includes('edson')) theme = 'Mentorias & Edson Lúcio'
+      else if (q.includes('preço') || q.includes('comprar')) theme = 'Valores e Matrículas'
+
+      const found = freq.get(theme)
+      if (found) found.count += 1
+      else freq.set(theme, { theme, count: 1 })
+    }
+
+    const frequent = Array.from(freq.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6)
+
+    return {
+      recent: tutorQueries.slice(0, 5),
+      frequent,
+    }
+  }, [tutorQueries])
 
   function formatWhen(value: string) {
     return new Date(value).toLocaleString('pt-BR', {
@@ -409,7 +459,161 @@ export default function AdminDashboard() {
         </div>
 
         {/* ======================================================== */}
-        {/* BLOCO 2.5: O QUE OS ALUNOS ESTÃO BUSCANDO               */}
+        {/* BLOCO 2.5: COMUNIDADE & TUTOR IA ANALYTICS               */}
+        {/* ======================================================== */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          {/* 1. Assuntos mais comentados da Comunidade */}
+          <section className="surface-card p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-orange/10 text-brand-orange">
+                    <Sparkles className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h2 className="font-extrabold text-brand-navy text-sm sm:text-base">
+                      Comunidade: Assuntos mais comentados
+                    </h2>
+                    <p className="text-xs text-brand-muted">
+                      Tópicos com maior engajamento entre os alunos
+                    </p>
+                  </div>
+                </div>
+                {communityData &&
+                (communityData.pendingTopicsCount > 0 || communityData.pendingRepliesCount > 0) ? (
+                  <Badge className="bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-100 text-[10px]">
+                    <Clock className="mr-1 h-3 w-3 text-amber-600" />
+                    {communityData.pendingTopicsCount + communityData.pendingRepliesCount}{' '}
+                    pendente(s)
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="border-brand-border text-brand-muted text-[10px]"
+                  >
+                    {communityData?.totalTopics || 0} tópico(s)
+                  </Badge>
+                )}
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {!communityData || communityData.mostCommented.length === 0 ? (
+                  <div className="py-6 rounded-2xl border border-dashed border-brand-border text-center text-xs text-brand-muted">
+                    Nenhum tópico aprovado na comunidade ainda.
+                  </div>
+                ) : (
+                  communityData.mostCommented.map((topic) => (
+                    <div
+                      key={topic.id}
+                      className="flex items-start justify-between gap-3 rounded-xl border border-brand-border bg-white p-3 text-xs hover:border-brand-orange/40 transition"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-bold text-brand-navy">{topic.title}</p>
+                        <p className="mt-0.5 text-[10px] text-brand-muted truncate">
+                          Por {topic.expand?.user?.name || 'Aluno'} ·{' '}
+                          {topic.expand?.course ? topic.expand.course.title : 'Geral'}
+                        </p>
+                      </div>
+                      <Badge className="shrink-0 bg-brand-orange/15 text-brand-orange hover:bg-brand-orange/20 border-brand-orange/30 text-[10px] font-bold">
+                        {topic.replies_count || 0} comentário
+                        {(topic.replies_count || 0) !== 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-brand-border pt-3 flex items-center justify-between text-xs">
+              <span className="text-brand-muted">Fila de moderação prévia ativa</span>
+              <Link
+                to="/admin/comunidade"
+                className="font-bold text-brand-orange hover:underline flex items-center gap-1"
+              >
+                Gerenciar moderação <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </section>
+
+          {/* 2. Dúvidas do Tutor Pílulas (Temas mais perguntados à IA) */}
+          <section className="surface-card p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-purple-500/10 text-purple-600">
+                    <GraduationCap className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h2 className="font-extrabold text-brand-navy text-sm sm:text-base">
+                      Dúvidas do Tutor Pílulas
+                    </h2>
+                    <p className="text-xs text-brand-muted">
+                      Temas mais frequentes perguntados ao agente de IA
+                    </p>
+                  </div>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="border-purple-200 bg-purple-50 text-purple-700 text-[10px]"
+                >
+                  {tutorQueries.length} pergunta{tutorQueries.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {tutorStats.frequent.length === 0 ? (
+                  <div className="py-6 rounded-2xl border border-dashed border-brand-border text-center text-xs text-brand-muted">
+                    Nenhuma dúvida enviada ao Tutor Pílulas ainda.
+                  </div>
+                ) : (
+                  <div>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-brand-muted mb-2">
+                      Temas com maior volume de perguntas
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {tutorStats.frequent.map((item) => (
+                        <span
+                          key={item.theme}
+                          className="rounded-full border border-purple-200 bg-purple-50/70 px-3 py-1.5 text-xs font-bold text-purple-900 flex items-center gap-1.5"
+                        >
+                          {item.theme}
+                          <strong className="text-brand-orange">×{item.count}</strong>
+                        </span>
+                      ))}
+                    </div>
+
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-brand-muted mt-4 mb-2">
+                      Perguntas recentes dos alunos & visitantes
+                    </span>
+                    <div className="space-y-1.5">
+                      {tutorStats.recent.slice(0, 3).map((item) => (
+                        <div
+                          key={item.id}
+                          className="rounded-xl border border-brand-border bg-white p-2.5 text-xs flex items-center justify-between gap-2"
+                        >
+                          <p className="truncate text-brand-navy font-semibold text-[11px]">
+                            "{item.query}"
+                          </p>
+                          <span className="shrink-0 text-[9px] text-brand-muted">
+                            {item.is_student ? 'Aluno' : 'Visitante'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-brand-border pt-3 text-[11px] text-brand-muted flex items-center justify-between">
+              <span>Registrado automaticamente via POST /backend/v1/tutor-chat</span>
+              <span className="text-purple-700 font-bold">Agente Tutor Pílulas</span>
+            </div>
+          </section>
+        </div>
+
+        {/* ======================================================== */}
+        {/* BLOCO 2.6: O QUE OS ALUNOS ESTÃO BUSCANDO (TRANSCRIÇÕES) */}
         {/* ======================================================== */}
         <section className="surface-card mt-6 p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -418,10 +622,11 @@ export default function AdminDashboard() {
                 <Search className="h-5 w-5" />
               </span>
               <div>
-                <h2 className="font-extrabold text-brand-navy">O que os alunos estão buscando</h2>
+                <h2 className="font-extrabold text-brand-navy">
+                  O que os alunos estão buscando nas transcrições
+                </h2>
                 <p className="text-xs text-brand-muted">
-                  Perguntas registradas na busca por significado (histórico completo fica no app do
-                  aluno)
+                  Pesquisas semânticas nas aulas gravadas (histórico de busca interna)
                 </p>
               </div>
             </div>

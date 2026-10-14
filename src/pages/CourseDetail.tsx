@@ -215,12 +215,12 @@ export default function CourseDetail() {
                   rodeios. Cada aula termina com algo que você pode aplicar.
                 </p>
                 <a
-                  href="https://www.instagram.com/prof_edsonlucio"
+                  href="https://www.instagram.com/edsonlucio"
                   target="_blank"
-                  rel="noreferrer"
-                  className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-brand-orange"
+                  rel="noopener noreferrer"
+                  className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-brand-orange hover:text-brand-orange-dark transition-colors"
                 >
-                  Conhecer Edson <ChevronRight className="h-4 w-4" />
+                  Conhecer Edson (@edsonlucio) <ChevronRight className="h-4 w-4" />
                 </a>
               </div>
             </div>

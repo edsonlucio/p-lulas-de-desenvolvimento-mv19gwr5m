@@ -387,11 +387,26 @@ export default function Layout() {
                   <Youtube className="h-4 w-4" />
                 </a>
               </div>
-              <p className="mt-4 text-xs leading-5 text-white/55">
-                @pilulasdedesenvolvimento
-                <br />
-                @prof_edsonlucio
-              </p>
+              <div className="mt-4 space-y-1 text-xs leading-5 text-white/55">
+                <a
+                  href="https://www.instagram.com/pilulasdedesenvolvimento"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 hover:text-white transition-colors"
+                >
+                  <Instagram className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                  <span>@pilulasdedesenvolvimento</span>
+                </a>
+                <a
+                  href="https://www.instagram.com/edsonlucio"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 hover:text-white transition-colors"
+                >
+                  <Instagram className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                  <span>@edsonlucio</span>
+                </a>
+              </div>
             </div>
           </div>
           <div className="border-t border-white/10">

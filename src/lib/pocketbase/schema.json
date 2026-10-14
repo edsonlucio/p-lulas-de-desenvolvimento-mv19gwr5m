@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T00:49:30.206Z",
+  "generatedAt": "2026-10-14T01:15:29.370Z",
   "collections": [
     {
       "name": "users",
@@ -545,6 +545,89 @@
       "indexes": [
         "CREATE INDEX idx_points_ledger_user ON points_ledger (user)",
         "CREATE INDEX idx_points_ledger_user_created ON points_ledger (user, created)"
+      ]
+    },
+    {
+      "name": "lesson_materials",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\"",
+        "view": "@request.auth.id != \"\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "lesson",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "lessons"
+        },
+        {
+          "name": "titulo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "tipo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["arquivo", "link"]
+        },
+        {
+          "name": "arquivo",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "url",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "sort",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "situacao",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["ativo", "inativo"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_materials_lesson ON lesson_materials (lesson)",
+        "CREATE INDEX idx_materials_sort ON lesson_materials (lesson, sort)",
+        "CREATE INDEX idx_materials_situacao ON lesson_materials (situacao)"
       ]
     }
   ]

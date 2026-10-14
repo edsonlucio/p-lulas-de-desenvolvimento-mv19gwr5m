@@ -8,7 +8,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Download,
+  ExternalLink,
+  FileSpreadsheet,
+  FileText,
+  FolderOpen,
+  Info,
   ListVideo,
+  LoaderCircle,
   Play,
   Sparkles,
 } from 'lucide-react'
@@ -21,17 +28,20 @@ import {
 } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LoadingScreen } from '@/components/LoadingScreen'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 import type {
   CourseBundle,
   EnrollmentRecord,
+  LessonMaterialRecord,
   LessonProgressRecord,
   LessonRecord,
 } from '@/lib/types'
 import { getYoutubeEmbed } from '@/lib/youtube'
 import { getCourseBundle } from '@/services/courses'
+import { getMaterialFileUrl, getMaterialKind, listMaterialsByLesson } from '@/services/materials'
 import { findEnrollment, listProgress, saveLessonPosition } from '@/services/student'
 
 function LessonsList({
@@ -120,6 +130,9 @@ export default function CoursePlayer() {
   const [loading, setLoading] = useState(true)
   const [burst, setBurst] = useState(false)
   const [mobileLessons, setMobileLessons] = useState(false)
+  const [materials, setMaterials] = useState<LessonMaterialRecord[]>([])
+  const [loadingMaterials, setLoadingMaterials] = useState(false)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -150,11 +163,81 @@ export default function CoursePlayer() {
       .finally(() => setLoading(false))
   }, [navigate, params, slug, user])
 
+  useEffect(() => {
+    if (!current) return
+    let active = true
+    setLoadingMaterials(true)
+    listMaterialsByLesson(current.id)
+      .then((items) => {
+        if (active) setMaterials(items)
+      })
+      .finally(() => {
+        if (active) setLoadingMaterials(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [current])
+
   const lessons = useMemo(() => bundle?.modules.flatMap((m) => m.lessons) ?? [], [bundle])
   const index = current ? lessons.findIndex((l) => l.id === current.id) : -1
   const currentProgress = current ? progress.find((p) => p.lesson === current.id) : undefined
   const completedCount = progress.filter((p) => p.completed).length
   const percent = lessons.length ? Math.round((completedCount / lessons.length) * 100) : 0
+
+  async function handleDownload(mat: LessonMaterialRecord) {
+    if (!enrollment || enrollment.situacao !== 'ativa') {
+      toast({
+        title: 'Acesso restrito',
+        description: 'É necessário ter matrícula ativa no curso para baixar materiais.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (mat.tipo === 'link') {
+      if (mat.url) {
+        window.open(mat.url, '_blank', 'noopener,noreferrer')
+      }
+      return
+    }
+
+    if (!mat.arquivo) {
+      toast({
+        title: 'Arquivo indisponível',
+        description: 'Este material de apoio ainda não possui arquivo anexado.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      setDownloadingId(mat.id)
+      const downloadUrl = await getMaterialFileUrl(mat, true)
+      if (!downloadUrl) throw new Error('URL de download não gerada')
+
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = mat.arquivo
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      toast({
+        title: 'Download iniciado',
+        description: `Baixando ${mat.titulo}.`,
+      })
+    } catch {
+      toast({
+        title: 'Erro ao baixar arquivo',
+        description: 'Não foi possível gerar o link de download protegido.',
+        variant: 'destructive',
+      })
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   function select(lesson: LessonRecord) {
     setCurrent(lesson)
@@ -302,23 +385,191 @@ export default function CoursePlayer() {
                   </div>
                 )}
 
-              <p className="mt-5 max-w-3xl leading-7 text-white/60">{current.description}</p>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                <span className="mr-1 self-center text-xs font-bold text-white/35">
-                  Salvar posição:
-                </span>
-                {[3, 7, 10]
-                  .filter((minute) => minute < current.duration_min)
-                  .map((minute) => (
-                    <button
-                      key={minute}
-                      onClick={() => void savePosition(minute)}
-                      className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-white/55 hover:border-brand-orange hover:text-brand-orange"
+              {/* Abas da aula: Sobre & Materiais */}
+              <div className="mt-7">
+                <Tabs defaultValue="conteudo" className="w-full">
+                  <TabsList className="h-11 rounded-full border border-white/10 bg-white/5 p-1">
+                    <TabsTrigger
+                      value="conteudo"
+                      className="rounded-full px-5 text-xs font-bold data-[state=active]:bg-brand-orange data-[state=active]:text-white"
                     >
-                      minuto {minute}
-                    </button>
-                  ))}
+                      <Info className="mr-2 h-3.5 w-3.5" />
+                      Sobre a aula
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="materiais"
+                      className="rounded-full px-5 text-xs font-bold data-[state=active]:bg-brand-orange data-[state=active]:text-white"
+                    >
+                      <FolderOpen className="mr-2 h-3.5 w-3.5" />
+                      Materiais
+                      {materials.length > 0 && (
+                        <span className="ml-2 rounded-full bg-white/20 px-1.5 py-0.2 text-[10px]">
+                          {materials.length}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="conteudo" className="mt-5 space-y-5">
+                    <p className="max-w-3xl leading-7 text-white/70">{current.description}</p>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      <span className="mr-1 text-xs font-bold text-white/35">
+                        Salvar posição rápida:
+                      </span>
+                      {[3, 5, 7, 10]
+                        .filter((minute) => minute < current.duration_min)
+                        .map((minute) => (
+                          <button
+                            key={minute}
+                            onClick={() => void savePosition(minute)}
+                            className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-white/55 transition hover:border-brand-orange hover:text-brand-orange"
+                          >
+                            minuto {minute}
+                          </button>
+                        ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="materiais" className="mt-5">
+                    <div className="rounded-2xl border border-white/10 bg-white/[.03] p-5">
+                      <div className="flex items-center justify-between pb-4">
+                        <div>
+                          <h3 className="text-base font-extrabold text-white">
+                            Materiais de apoio da aula
+                          </h3>
+                          <p className="text-xs text-white/45">
+                            Arquivos para download (PDF, planilhas Excel) e links de aprofundamento.
+                          </p>
+                        </div>
+                      </div>
+
+                      {loadingMaterials ? (
+                        <div className="flex items-center justify-center py-10 text-white/50">
+                          <LoaderCircle className="mr-2 h-5 w-5 animate-spin text-brand-orange" />
+                          <span className="text-sm">Carregando materiais…</span>
+                        </div>
+                      ) : materials.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+                          <FolderOpen className="mx-auto h-8 w-8 text-white/25" />
+                          <p className="mt-2 text-sm font-semibold text-white/60">
+                            Esta aula ainda não tem materiais.
+                          </p>
+                          <p className="text-xs text-white/35">
+                            Quando o professor anexar PDFs, planilhas ou links, eles aparecerão
+                            aqui.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {materials.map((mat) => {
+                            const kind = getMaterialKind(mat)
+                            const isExcel = kind === 'excel' || kind === 'csv'
+                            const isPdf = kind === 'pdf'
+                            const isLink = mat.tipo === 'link'
+                            const isDownloading = downloadingId === mat.id
+
+                            return (
+                              <div
+                                key={mat.id}
+                                className="group flex flex-col justify-between gap-4 rounded-xl border border-white/10 bg-brand-navy/60 p-4 transition hover:border-white/25 hover:bg-brand-navy/90 sm:flex-row sm:items-center"
+                              >
+                                <div className="flex items-start gap-3.5">
+                                  <div
+                                    className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
+                                      isPdf
+                                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                        : isExcel
+                                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                          : isLink
+                                            ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
+                                            : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                    }`}
+                                  >
+                                    {isPdf && <FileText className="h-5 w-5" />}
+                                    {isExcel && <FileSpreadsheet className="h-5 w-5" />}
+                                    {isLink && <ExternalLink className="h-5 w-5" />}
+                                    {!isPdf && !isExcel && !isLink && (
+                                      <FileText className="h-5 w-5" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h4 className="text-sm font-bold text-white group-hover:text-brand-orange transition">
+                                        {mat.titulo}
+                                      </h4>
+                                      <span
+                                        className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+                                          isPdf
+                                            ? 'bg-rose-500/20 text-rose-300'
+                                            : isExcel
+                                              ? 'bg-emerald-500/20 text-emerald-300'
+                                              : isLink
+                                                ? 'bg-sky-500/20 text-sky-300'
+                                                : 'bg-white/10 text-white/60'
+                                        }`}
+                                      >
+                                        {isPdf
+                                          ? 'PDF'
+                                          : isExcel
+                                            ? 'Excel'
+                                            : isLink
+                                              ? 'Link Externo'
+                                              : 'Arquivo'}
+                                      </span>
+                                    </div>
+                                    {mat.descricao && (
+                                      <p className="mt-1 text-xs text-white/50 leading-relaxed">
+                                        {mat.descricao}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex shrink-0 items-center gap-2 sm:self-center">
+                                  {isLink ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDownload(mat)}
+                                      className="rounded-full border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 hover:text-white"
+                                    >
+                                      <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                                      Abrir link
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      disabled={isDownloading}
+                                      onClick={() => handleDownload(mat)}
+                                      className={`rounded-full font-bold shadow-sm ${
+                                        isExcel
+                                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                          : 'bg-brand-orange hover:bg-brand-orange-dark text-white'
+                                      }`}
+                                    >
+                                      {isDownloading ? (
+                                        <>
+                                          <LoaderCircle className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                          Baixando…
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Download className="mr-1.5 h-3.5 w-3.5" />
+                                          Baixar
+                                        </>
+                                      )}
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
 
               <div className="mt-8 flex flex-col gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">

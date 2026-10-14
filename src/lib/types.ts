@@ -41,6 +41,19 @@ export interface LessonRecord extends RecordModel {
   transcript: string
 }
 
+export type MaterialType = 'arquivo' | 'link'
+
+export interface LessonMaterialRecord extends RecordModel {
+  lesson: string
+  titulo: string
+  tipo: MaterialType
+  arquivo?: string
+  url?: string
+  descricao?: string
+  sort: number
+  situacao?: 'ativo' | 'inativo'
+}
+
 export interface EnrollmentRecord extends RecordModel {
   user: string
   course: string

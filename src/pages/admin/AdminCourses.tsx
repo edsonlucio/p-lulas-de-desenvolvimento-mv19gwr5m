@@ -1,12 +1,18 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import {
   Edit3,
+  ExternalLink,
+  Eye,
+  FileSpreadsheet,
+  FileText,
+  FolderOpen,
   ImagePlus,
   Layers3,
   LoaderCircle,
   Plus,
   Search,
   Sparkles,
+  Video,
   Youtube,
 } from 'lucide-react'
 
@@ -31,11 +37,12 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { CourseCover } from '@/components/CourseCover'
+import { AdminMaterialsManager } from '@/components/admin/AdminMaterialsManager'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
-import type { CourseRecord } from '@/lib/types'
+import type { CourseBundle, CourseRecord, LessonRecord } from '@/lib/types'
 import { createCourse, updateCourse } from '@/services/admin'
-import { formatPrice, getCourseCounts, listAllCourses } from '@/services/courses'
+import { formatPrice, getCourseBundle, getCourseCounts, listAllCourses } from '@/services/courses'
 
 export default function AdminCourses() {
   const { toast } = useToast()
@@ -57,6 +64,13 @@ export default function AdminCourses() {
     published: false,
   })
   const [thumbnail, setThumbnail] = useState<File | null>(null)
+
+  // Gerenciamento de aulas e materiais
+  const [structureOpen, setStructureOpen] = useState(false)
+  const [selectedCourseBundle, setSelectedCourseBundle] = useState<CourseBundle | null>(null)
+  const [loadingStructure, setLoadingStructure] = useState(false)
+  const [managingLessonMaterials, setManagingLessonMaterials] = useState<LessonRecord | null>(null)
+
   async function load() {
     const records = await listAllCourses()
     setCourses(records)
@@ -126,6 +140,30 @@ export default function AdminCourses() {
       await load()
     } catch {
       toast({ title: 'Não foi possível alterar a publicação', variant: 'destructive' })
+    }
+  }
+
+  async function openStructure(course: CourseRecord) {
+    setLoadingStructure(true)
+    setStructureOpen(true)
+    try {
+      const bundle = await getCourseBundle(course.slug)
+      setSelectedCourseBundle(bundle)
+    } catch {
+      toast({ title: 'Erro ao carregar estrutura do curso', variant: 'destructive' })
+    } finally {
+      setLoadingStructure(false)
+    }
+  }
+
+  async function refreshStructure() {
+    if (!selectedCourseBundle) return
+    try {
+      const bundle = await getCourseBundle(selectedCourseBundle.course.slug)
+      setSelectedCourseBundle(bundle)
+      await load()
+    } catch {
+      /* intentionally ignored */
     }
   }
   const visible = courses.filter((course) =>
@@ -321,15 +359,25 @@ export default function AdminCourses() {
                       </td>
                       <td className="font-bold">—</td>
                       <td>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full"
-                          onClick={() => startEdit(course)}
-                        >
-                          <Edit3 className="mr-2 h-3.5 w-3.5" />
-                          Editar
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            className="rounded-full bg-brand-orange hover:bg-brand-orange-dark text-white font-bold"
+                            onClick={() => void openStructure(course)}
+                          >
+                            <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
+                            Aulas & Materiais
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full"
+                            onClick={() => startEdit(course)}
+                          >
+                            <Edit3 className="mr-1.5 h-3.5 w-3.5" />
+                            Editar
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -347,15 +395,117 @@ export default function AdminCourses() {
           <div className="flex items-start gap-3">
             <Youtube className="mt-0.5 h-5 w-5 text-brand-orange" />
             <div>
-              <h2 className="font-extrabold text-brand-navy">Vídeos por link do YouTube</h2>
+              <h2 className="font-extrabold text-brand-navy">Vídeos e Materiais Didáticos</h2>
               <p className="mt-1 text-sm leading-6 text-brand-muted">
-                As aulas usam URLs públicas do YouTube e são exibidas no player incorporado. O
-                editor estrutural completo de módulos e aulas utiliza as coleções{' '}
-                <code>modules</code> e <code>lessons</code> do PocketBase.
+                Em cada aula é possível anexar arquivos para download (PDF, planilhas Excel
+                .xlsx/.xls, CSV e Word) ou cadastrar links externos de aprofundamento. Os alunos
+                matriculados acessam esses materiais diretamente pela aba "Materiais" na tela do
+                Player.
               </p>
             </div>
           </div>
         </div>
+
+        {/* Modal de Gestão de Módulos, Aulas e Acesso a Materiais */}
+        <Dialog open={structureOpen} onOpenChange={setStructureOpen}>
+          <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto rounded-3xl">
+            <DialogHeader>
+              <div className="flex items-center gap-2 text-xs font-bold text-brand-orange">
+                <span>Estrutura do Curso</span>
+                <span>•</span>
+                <span>Módulos, Aulas & Materiais</span>
+              </div>
+              <DialogTitle className="text-xl font-extrabold text-brand-navy">
+                {selectedCourseBundle?.course.title || 'Estrutura do Curso'}
+              </DialogTitle>
+              <DialogDescription>
+                Selecione uma aula para gerenciar seus materiais didáticos (PDFs, planilhas Excel,
+                links).
+              </DialogDescription>
+            </DialogHeader>
+
+            {loadingStructure ? (
+              <div className="flex items-center justify-center py-12 text-brand-muted">
+                <LoaderCircle className="mr-2 h-5 w-5 animate-spin text-brand-orange" />
+                Carregando estrutura…
+              </div>
+            ) : !selectedCourseBundle?.modules.length ? (
+              <div className="rounded-2xl border border-dashed border-brand-border p-8 text-center text-sm text-brand-muted">
+                Nenhum módulo cadastrado para este curso.
+              </div>
+            ) : (
+              <div className="mt-4 space-y-6">
+                {selectedCourseBundle.modules.map((mod, modIdx) => (
+                  <div
+                    key={mod.id}
+                    className="rounded-2xl border border-brand-border bg-brand-surface p-5"
+                  >
+                    <div className="flex items-center justify-between border-b border-brand-border/60 pb-3">
+                      <div>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-brand-orange">
+                          Módulo {modIdx + 1}
+                        </span>
+                        <h3 className="text-sm font-bold text-brand-navy">{mod.title}</h3>
+                      </div>
+                      <span className="text-xs text-brand-muted font-semibold">
+                        {mod.lessons.length} {mod.lessons.length === 1 ? 'aula' : 'aulas'}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 space-y-2">
+                      {mod.lessons.map((lesson, lIdx) => (
+                        <div
+                          key={lesson.id}
+                          className="flex flex-col justify-between gap-3 rounded-xl border border-white bg-white p-3.5 shadow-sm sm:flex-row sm:items-center"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="grid h-6 w-6 place-items-center rounded-full bg-brand-navy/5 text-xs font-bold text-brand-navy">
+                                {lIdx + 1}
+                              </span>
+                              <strong className="text-sm text-brand-navy truncate">
+                                {lesson.title}
+                              </strong>
+                            </div>
+                            <div className="mt-1 flex items-center gap-3 text-xs text-brand-muted pl-8">
+                              <span>{lesson.duration_min} min</span>
+                              <span>•</span>
+                              <span>{lesson.is_free ? 'Degustação grátis' : 'Exclusiva'}</span>
+                              <span>•</span>
+                              <span className="capitalize">{lesson.situacao}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex shrink-0 items-center gap-2 sm:self-center">
+                            <Button
+                              size="sm"
+                              className="pill-button bg-brand-orange hover:bg-brand-orange-dark text-white font-bold"
+                              onClick={() => setManagingLessonMaterials(lesson)}
+                            >
+                              <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
+                              Gerenciar Materiais
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Materiais da Aula selecionada */}
+        {managingLessonMaterials && (
+          <AdminMaterialsManager
+            lesson={managingLessonMaterials}
+            onClose={() => {
+              setManagingLessonMaterials(null)
+              void refreshStructure()
+            }}
+          />
+        )}
       </div>
     </div>
   )

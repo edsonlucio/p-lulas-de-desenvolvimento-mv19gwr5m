@@ -27,53 +27,23 @@ export function useRealtime<TRecord extends RecordModel = RecordModel>(
     let unsubscribeFn: (() => Promise<void>) | undefined
     let cancelled = false
 
-    const subscribeWithRetry = async () => {
-      try {
-        const fn = await pb.collection<TRecord>(collectionName).subscribe('*', (e) => {
-          callbackRef.current(e)
-        })
+    pb.collection<TRecord>(collectionName)
+      .subscribe('*', (e) => {
+        callbackRef.current(e)
+      })
+      .then((fn) => {
         if (cancelled) {
-          void fn().catch(() => {})
+          fn().catch(() => {})
         } else {
           unsubscribeFn = fn
         }
-      } catch (err) {
-        const isAuthMismatch =
-          err instanceof Error &&
-          (err.message.includes("authorization don't match") ||
-            (err as { status?: number }).status === 403)
-
-        if (isAuthMismatch) {
-          try {
-            await pb.realtime.unsubscribe()
-            if (!cancelled) {
-              const retryFn = await pb.collection<TRecord>(collectionName).subscribe('*', (e) => {
-                callbackRef.current(e)
-              })
-              if (cancelled) {
-                void retryFn().catch(() => {})
-              } else {
-                unsubscribeFn = retryFn
-              }
-            }
-          } catch (retryErr) {
-            console.warn(
-              `[Realtime] Failed to subscribe to "${collectionName}" after reset:`,
-              retryErr,
-            )
-          }
-        } else {
-          console.warn(`[Realtime] Error subscribing to "${collectionName}":`, err)
-        }
-      }
-    }
-
-    void subscribeWithRetry()
+      })
+      .catch(() => {})
 
     return () => {
       cancelled = true
       if (unsubscribeFn) {
-        void unsubscribeFn().catch(() => {})
+        unsubscribeFn().catch(() => {})
       }
     }
   }, [collectionName, enabled])

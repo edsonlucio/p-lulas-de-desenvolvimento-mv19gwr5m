@@ -7,21 +7,27 @@ import {
   BarChart3,
   BookOpen,
   BriefcaseBusiness,
+  Calendar,
   Check,
   ChevronRight,
   Crown,
+  HelpCircle,
   Instagram,
   Lightbulb,
   MessageCircle,
   Play,
+  Quote,
   Rocket,
   Sparkles,
   Star,
   Target,
   Trophy,
   UsersRound,
+  Video,
+  Zap,
 } from 'lucide-react'
 
+import clubeLogo from '@/assets/imagemgerada1789555881046-08982.png'
 import { Button } from '@/components/ui/button'
 import { CourseCover } from '@/components/CourseCover'
 import { LEVELS } from '@/lib/gamification'
@@ -211,6 +217,183 @@ export default function Index() {
               <p className="mt-2 text-sm leading-6 text-brand-muted">{text}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      {/* Clube das Pílulas — Ancorado em /#clube */}
+      <section
+        id="clube"
+        className="section-space relative overflow-hidden bg-brand-navy text-white"
+      >
+        <div className="orange-glow pointer-events-none absolute -right-32 top-10 h-[560px] w-[560px]" />
+        <div className="pointer-events-none absolute -left-32 bottom-0 h-[480px] w-[480px] rounded-full bg-blue-500/10 blur-3xl" />
+
+        <div className="container-site relative">
+          {/* Header da seção */}
+          <div className="max-w-3xl">
+            <span className="eyebrow border border-brand-orange/30 bg-brand-orange/10 px-4 py-2">
+              <BookOpen className="h-4 w-4" /> Clube de leitura da Pílulas de Desenvolvimento
+            </span>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-[-.04em] sm:text-5xl">
+              Clube das Pílulas — <span className="text-brand-orange">uma metanoia diária</span>.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-white/75 sm:text-lg">
+              Nosso clube de leitura une constância, reflexão e transformação prática. Em vez de
+              leituras pesadas que você abandona no meio, aqui dividimos a jornada em pequenos
+              passos diários que realmente cabem na sua rotina e mudam a sua mente.
+            </p>
+          </div>
+
+          {/* Destaque principal: Logo oficial + Livro atual */}
+          <div className="mt-12 grid gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-stretch">
+            {/* Card do Livro Atual */}
+            <article className="relative overflow-hidden rounded-[32px] border border-white/15 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-7 backdrop-blur-xl sm:p-10">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-orange px-4 py-1.5 text-xs font-extrabold text-white shadow-[0_4px_16px_rgba(255,107,44,.4)]">
+                  <Sparkles className="h-3.5 w-3.5" /> Livro atual do Clube
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
+                  <Calendar className="h-3.5 w-3.5 text-brand-orange" /> Início: 05/10
+                </span>
+              </div>
+
+              <div className="mt-8">
+                <p className="text-xs font-bold uppercase tracking-[.2em] text-white/50">
+                  Leitura guiada
+                </p>
+                <h3 className="mt-2 text-2xl font-extrabold leading-tight text-white sm:text-4xl">
+                  Metanoia — a chave está na sua mente
+                </h3>
+                <p className="mt-3 text-lg font-semibold text-brand-orange">Por JB Carvalho</p>
+              </div>
+
+              <p className="mt-6 text-sm leading-7 text-white/70 sm:text-base">
+                Uma obra profunda sobre renovação de mentalidade, identidade e liderança interior.
+                Cada página nos desafia a quebrar padrões antigos para experimentar uma
+                transformação genuína na vida pessoal e profissional.
+              </p>
+
+              {/* Informações de datas e encontro */}
+              <div className="mt-8 grid gap-4 rounded-2xl border border-white/10 bg-white/5 p-5 sm:grid-cols-2">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-orange/20 text-brand-orange">
+                    <Calendar className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <span className="block text-xs font-bold text-white/50 uppercase tracking-wider">
+                      Leitura iniciada
+                    </span>
+                    <strong className="block text-base font-extrabold text-white">
+                      05 de Outubro
+                    </strong>
+                    <span className="text-xs text-white/60">7 a 8 páginas por dia</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-orange/20 text-brand-orange">
+                    <Video className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <span className="block text-xs font-bold text-white/50 uppercase tracking-wider">
+                      Encontro virtual
+                    </span>
+                    <strong className="block text-base font-extrabold text-white">
+                      03/11/2026
+                    </strong>
+                    <span className="text-xs text-white/60">Debate & alinhamento ao vivo</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA direto para o WhatsApp */}
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button
+                  asChild
+                  size="lg"
+                  className="pill-button h-13 bg-brand-orange px-8 text-base text-white hover:bg-brand-orange-dark shadow-[0_8px_24px_rgba(255,107,44,.4)]"
+                >
+                  <a
+                    href="https://chat.whatsapp.com/GDwgDsxlgc56o0qOBM6r7o"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <MessageCircle className="mr-2 h-5 w-5" /> Entrar no grupo do WhatsApp
+                  </a>
+                </Button>
+                <span className="text-xs text-white/55">Grupo oficial e 100% gratuito</span>
+              </div>
+            </article>
+
+            {/* Card com o Logo Oficial do Clube + Como funciona */}
+            <article className="flex flex-col justify-between rounded-[32px] border border-white/15 bg-white/5 p-7 backdrop-blur-xl sm:p-10">
+              <div className="flex flex-col items-center text-center">
+                <div className="relative mx-auto flex w-full max-w-[260px] items-center justify-center overflow-hidden rounded-3xl border border-white/15 bg-black p-6 shadow-2xl">
+                  <img
+                    src={clubeLogo}
+                    alt="Clube das Pílulas — uma metanoia diária"
+                    className="h-auto w-full object-contain"
+                  />
+                </div>
+                <h4 className="mt-6 text-xl font-extrabold text-white">O que acontece no grupo?</h4>
+                <p className="mt-2 text-sm leading-6 text-white/70">
+                  De <strong>segunda a sábado</strong> (domingo é dia de descanso), nossa comunidade
+                  recebe a dose exata para manter o foco na leitura.
+                </p>
+              </div>
+
+              {/* A rotina diária no WhatsApp */}
+              <div className="mt-6 space-y-3">
+                <div className="flex items-start gap-3.5 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-orange/20 text-brand-orange">
+                    <HelpCircle className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <strong className="block text-sm font-bold text-white">
+                      1 card com 1 pergunta
+                    </strong>
+                    <p className="mt-0.5 text-xs leading-5 text-white/65">
+                      Para direcionar o seu olhar antes ou depois da leitura do dia.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-orange/20 text-brand-orange">
+                    <Zap className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <strong className="block text-sm font-bold text-white">
+                      1 breve resumo das páginas do dia
+                    </strong>
+                    <p className="mt-0.5 text-xs leading-5 text-white/65">
+                      Meta leve de <strong>7 a 8 páginas por dia</strong> — sintetizadas com
+                      clareza.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-orange/20 text-brand-orange">
+                    <Quote className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <strong className="block text-sm font-bold text-white">
+                      1 card de provocação
+                    </strong>
+                    <p className="mt-0.5 text-xs leading-5 text-white/65">
+                      Um gatilho para gerar reflexão profunda e aplicação imediata na sua rotina.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rodapé do card */}
+              <div className="mt-6 border-t border-white/10 pt-5 text-center text-xs text-white/55">
+                Segunda a sábado · Domingo de descanso · Comunidade ativa
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 

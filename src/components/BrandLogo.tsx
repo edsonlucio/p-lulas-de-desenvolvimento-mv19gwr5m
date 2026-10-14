@@ -1,33 +1,35 @@
 import { Link } from 'react-router-dom'
-import { Sparkles } from 'lucide-react'
 
+import officialLogo from '@/assets/logotipo-principal-variacao-escura-a357e.png'
 import { cn } from '@/lib/utils'
 
 export function BrandLogo({
   inverse = false,
   compact = false,
+  className,
 }: {
   inverse?: boolean
   compact?: boolean
+  className?: string
 }) {
   return (
     <Link
       to="/"
-      className="group flex items-center gap-3"
+      className={cn(
+        'group inline-flex items-center transition-opacity hover:opacity-90',
+        className,
+      )}
       aria-label="Pílulas de Desenvolvimento — início"
     >
-      <span className="relative flex h-10 w-14 rotate-[-8deg] items-center justify-center overflow-hidden rounded-full bg-brand-orange shadow-[0_8px_24px_rgba(255,107,44,.32)] transition-transform group-hover:rotate-0">
-        <span className="absolute inset-y-0 left-1/2 w-px bg-white/50" />
-        <Sparkles className="h-4 w-4 text-white" />
-      </span>
-      {!compact && (
-        <span className={cn('leading-tight', inverse ? 'text-white' : 'text-brand-navy')}>
-          <strong className="block text-[15px] font-extrabold tracking-[-.02em]">Pílulas de</strong>
-          <span className="block text-[12px] font-semibold tracking-[.06em] opacity-75">
-            DESENVOLVIMENTO
-          </span>
-        </span>
-      )}
+      <img
+        src={officialLogo}
+        alt="Pílulas de Desenvolvimento"
+        className={cn(
+          'w-auto object-contain transition duration-200',
+          compact ? 'h-8 sm:h-9' : 'h-10 sm:h-11',
+          inverse && 'brightness-0 invert drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]',
+        )}
+      />
     </Link>
   )
 }

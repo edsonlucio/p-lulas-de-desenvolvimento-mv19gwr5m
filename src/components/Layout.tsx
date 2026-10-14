@@ -27,6 +27,7 @@ import {
 import { BrandLogo } from '@/components/BrandLogo'
 import { LevelBadge } from '@/components/LevelBadge'
 import { LevelUpCelebration } from '@/components/LevelUpCelebration'
+import { TutorWidget } from '@/components/TutorWidget'
 import { VerifiedBanner } from '@/components/VerifiedBanner'
 import { useAuth } from '@/contexts/AuthContext'
 import pb from '@/lib/pocketbase/client'
@@ -314,6 +315,9 @@ export default function Layout() {
       <main className="min-h-[70vh]">
         <Outlet />
       </main>
+
+      {/* Tutor Pílulas — Agente Nativo Skip Cloud (Vitrine e Área do Aluno) */}
+      <TutorWidget />
 
       {!isAdmin && (
         <footer id="contato" className="bg-brand-navy text-white">

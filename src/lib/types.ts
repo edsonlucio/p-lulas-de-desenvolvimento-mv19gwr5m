@@ -109,6 +109,14 @@ export interface CourseBundle {
   duration: number
 }
 
+export type SearchCitation = {
+  lesson_id: string
+  lesson_title: string
+  module_title: string
+  course_title: string
+  course_slug: string
+}
+
 export interface SearchResult {
   id: string
   title: string

@@ -1,22 +1,36 @@
-import { useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   BookOpen,
   Headphones,
+  History,
   Lightbulb,
   LoaderCircle,
+  RotateCcw,
   Search,
   SearchX,
   Sparkles,
+  Trash2,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { SearchResult } from '@/lib/types'
-import { searchLessons } from '@/services/search'
+import pb from '@/lib/pocketbase/client'
+import { clearSearchHistory, listSearchHistory, searchLessons } from '@/services/search'
+import type { SearchHistoryRecord } from '@/services/search'
 
 const suggestions = ['funil de vendas', 'tráfego pago', 'autoridade', 'métricas']
+
+function formatWhen(value: string) {
+  return new Date(value).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 export default function SearchLessons() {
   const [query, setQuery] = useState('')
@@ -24,15 +38,35 @@ export default function SearchLessons() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [emptyMessage, setEmptyMessage] = useState('')
+  const [history, setHistory] = useState<SearchHistoryRecord[]>([])
+  const [clearing, setClearing] = useState(false)
+
+  const loadHistory = useCallback(() => {
+    if (!pb.authStore.record?.id) return
+    listSearchHistory(8)
+      .then((page) => setHistory(page.items))
+      .catch(() => setHistory([]))
+  }, [])
+
+  useEffect(() => {
+    loadHistory()
+  }, [loadHistory])
+
   async function runSearch(value: string) {
     if (!value.trim()) return
     setQuery(value)
     setSubmitted(value)
     setLoading(true)
     setError('')
+    setEmptyMessage('')
     try {
       const response = await searchLessons(value.trim())
       setResults(response.results)
+      setEmptyMessage(
+        response.results.length === 0 ? response.message || 'não encontrei nos seus cursos' : '',
+      )
+      loadHistory()
     } catch {
       setResults([])
       setError('A busca semântica não respondeu agora. Tente novamente em instantes.')
@@ -40,6 +74,21 @@ export default function SearchLessons() {
       setLoading(false)
     }
   }
+
+  async function wipeHistory() {
+    if (!confirm('Apagar todo o seu histórico de buscas?')) return
+    setClearing(true)
+    try {
+      const rows = await clearSearchHistory()
+      await Promise.all(rows.map((row) => pb.collection('search_history').delete(row.id)))
+      setHistory([])
+    } catch {
+      // ignora: não bloqueia a página se o histórico falhar
+    } finally {
+      setClearing(false)
+    }
+  }
+
   function submit(e: FormEvent) {
     e.preventDefault()
     void runSearch(query)
@@ -181,16 +230,79 @@ export default function SearchLessons() {
           <div className="mx-auto mt-12 max-w-2xl rounded-3xl border border-dashed border-brand-border bg-white p-10 text-center">
             <SearchX className="mx-auto h-12 w-12 text-brand-orange" />
             <h2 className="mt-5 text-xl font-extrabold text-brand-navy">
-              Não encontramos essa resposta ainda
+              {emptyMessage || 'não encontrei nos seus cursos'}
             </h2>
             <p className="mt-2 text-sm leading-6 text-brand-muted">
-              Tente reformular com palavras mais diretas ou explore o catálogo para descobrir novos
-              conteúdos.
+              Sua busca olha apenas para os cursos em que você tem matrícula ativa. Tente reformular
+              com palavras mais diretas ou explore o catálogo para descobrir novos conteúdos.
             </p>
             <Button asChild variant="outline" className="pill-button mt-6">
               <Link to="/cursos">Ver catálogo</Link>
             </Button>
           </div>
+        )}
+        {history.length > 0 && (
+          <section className="mx-auto mt-14 max-w-4xl">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-navy/5 text-brand-navy">
+                  <History className="h-5 w-5" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-extrabold text-brand-navy">Histórico de buscas</h2>
+                  <p className="text-xs text-brand-muted">
+                    Suas perguntas recentes — clique para refazer a busca.
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={clearing}
+                onClick={() => void wipeHistory()}
+                className="pill-button shrink-0 text-brand-orange hover:bg-brand-orange/10 hover:text-brand-orange-dark"
+              >
+                {clearing ? (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Limpar
+              </Button>
+            </div>
+            <ul className="mt-5 space-y-3">
+              {history.map((item) => (
+                <li key={item.id}>
+                  <button
+                    onClick={() => void runSearch(item.query)}
+                    className="interactive-card w-full p-4 text-left"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-brand-navy">{item.query}</p>
+                        <p className="mt-1 truncate text-xs text-brand-muted">
+                          {formatWhen(item.created)} ·{' '}
+                          {item.results_count > 0
+                            ? item.results_count === 1
+                              ? '1 resposta'
+                              : `${item.results_count} respostas`
+                            : emptyMessage || 'não encontrei nos seus cursos'}
+                          {item.results_count > 0 && item.citations && item.citations.length > 0
+                            ? ` · ${item.citations
+                                .map((c) => c.course_title + ' → ' + c.lesson_title)
+                                .join(' · ')}`
+                            : ''}
+                        </p>
+                      </div>
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-orange/10 text-brand-orange">
+                        <RotateCcw className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
       </div>
     </div>

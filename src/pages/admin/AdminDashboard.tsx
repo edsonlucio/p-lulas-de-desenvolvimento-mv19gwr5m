@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Percent,
   Receipt,
+  Search,
   Sparkles,
   TrendingUp,
   UserX,
@@ -31,8 +32,9 @@ import type {
   OrderRecord,
   UserRecord,
 } from '@/lib/types'
-import { getAdminSnapshot } from '@/services/admin'
+import { getAdminSnapshot, listSearches } from '@/services/admin'
 import { listAllCourses } from '@/services/courses'
+import type { SearchHistoryRecord } from '@/services/search'
 
 interface Snapshot {
   users: UserRecord[]
@@ -46,18 +48,21 @@ export default function AdminDashboard() {
   const [data, setData] = useState<Snapshot | null>(null)
   const [courses, setCourses] = useState<CourseRecord[]>([])
   const [allLessons, setAllLessons] = useState<LessonRecord[]>([])
+  const [searches, setSearches] = useState<SearchHistoryRecord[]>([])
 
   useEffect(() => {
     Promise.all([
       getAdminSnapshot(),
       listAllCourses(),
+      listSearches(),
       pb.collection<LessonRecord>('lessons').getFullList({
         filter: 'situacao = "ativo"',
         expand: 'module',
       }),
-    ]).then(([snapshot, records, lessons]) => {
+    ]).then(([snapshot, records, history, lessons]) => {
       setData(snapshot)
       setCourses(records)
+      setSearches(history.items)
       setAllLessons(lessons)
     })
   }, [])
@@ -83,6 +88,32 @@ export default function AdminDashboard() {
     [data],
   )
   const totalStudents = Math.max(1, data?.users.length || 0)
+
+  // O que os alunos estão buscando: buscas mais recentes e temas mais frequentes
+  const searchStats = useMemo(() => {
+    if (searches.length === 0) return { recent: [], frequent: [] }
+    const freq = new Map<string, { term: string; count: number }>()
+    for (const item of searches) {
+      const term = item.query.toLowerCase().trim()
+      if (!term) continue
+      const found = freq.get(term)
+      if (found) found.count += 1
+      else freq.set(term, { term: item.query.trim(), count: 1 })
+    }
+    const frequent = Array.from(freq.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+    return { recent: searches.slice(0, 5), frequent }
+  }, [searches])
+
+  function formatWhen(value: string) {
+    return new Date(value).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
 
   // ==========================================
   // BLOCO 2: 3 NOVOS KPIs DO DASHBOARD
@@ -376,6 +407,83 @@ export default function AdminDashboard() {
             </div>
           </section>
         </div>
+
+        {/* ======================================================== */}
+        {/* BLOCO 2.5: O QUE OS ALUNOS ESTÃO BUSCANDO               */}
+        {/* ======================================================== */}
+        <section className="surface-card mt-6 p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-navy/5 text-brand-navy">
+                <Search className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-extrabold text-brand-navy">O que os alunos estão buscando</h2>
+                <p className="text-xs text-brand-muted">
+                  Perguntas registradas na busca por significado (histórico completo fica no app do
+                  aluno)
+                </p>
+              </div>
+            </div>
+            <Badge
+              variant="outline"
+              className="border-brand-border bg-brand-subtle text-brand-navy"
+            >
+              {searches.length} busca{searches.length !== 1 ? 's' : ''} recente
+              {searches.length !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+          {searches.length === 0 ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-brand-border p-6 text-center text-xs text-brand-muted">
+              Nenhuma busca registrada ainda.
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-brand-muted">
+                  Buscas mais recentes
+                </span>
+                <div className="mt-3 space-y-2.5">
+                  {searchStats.recent.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-brand-border bg-white p-3 text-xs"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-bold text-brand-navy">{item.query}</p>
+                        <p className="truncate text-[10px] text-brand-muted">
+                          {item.expand?.user?.name || 'Aluno'} ·{' '}
+                          {item.results_count > 0
+                            ? `${item.results_count} resposta${item.results_count > 1 ? 's' : ''}`
+                            : 'sem resultados'}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-[10px] font-semibold text-brand-muted">
+                        {formatWhen(item.created)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-brand-muted">
+                  Termos mais frequentes
+                </span>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {searchStats.frequent.map((item) => (
+                    <span
+                      key={item.term}
+                      className="rounded-full border border-brand-border bg-brand-subtle px-3 py-1.5 text-xs font-bold text-brand-navy"
+                    >
+                      {item.term}
+                      <strong className="ml-1.5 text-brand-orange">×{item.count}</strong>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* ======================================================== */}
         {/* BLOCO 2: 3 NOVOS KPIs DE GESTÃO DA PLATAFORMA           */}

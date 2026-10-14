@@ -6,6 +6,7 @@ import type {
   OrderRecord,
   UserRecord,
 } from '@/lib/types'
+import type { SearchHistoryRecord } from '@/services/search'
 
 export async function getAdminSnapshot() {
   const [users, enrollments, orders, progress, allProgress] = await Promise.all([
@@ -20,6 +21,12 @@ export async function getAdminSnapshot() {
     pb.collection<LessonProgressRecord>('lesson_progress').getFullList({ sort: '-updated' }),
   ])
   return { users, enrollments, orders, progress, allProgress }
+}
+
+export async function listSearches() {
+  return pb
+    .collection<SearchHistoryRecord>('search_history')
+    .getList(1, 10, { sort: '-created', expand: 'user' })
 }
 
 export async function createCourse(data: FormData | Record<string, unknown>) {

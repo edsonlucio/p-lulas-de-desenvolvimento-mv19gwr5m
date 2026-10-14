@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T02:52:25.388Z",
+  "generatedAt": "2026-10-14T03:05:58.099Z",
   "collections": [
     {
       "name": "users",
@@ -836,6 +836,62 @@
       "indexes": [
         "CREATE UNIQUE INDEX idx_club_daily_cards_date ON club_daily_cards (date)",
         "CREATE INDEX idx_club_daily_cards_status ON club_daily_cards (status)"
+      ]
+    },
+    {
+      "name": "search_history",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")",
+        "view": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")",
+        "create": "@request.auth.id != \"\" && user = @request.auth.id",
+        "update": null,
+        "delete": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "query",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "results_count",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "citations",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_search_history_user_created ON search_history (user, created DESC)",
+        "CREATE INDEX idx_search_history_created ON search_history (created DESC)"
       ]
     }
   ]

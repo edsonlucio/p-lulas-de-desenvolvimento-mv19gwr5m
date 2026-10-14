@@ -1,9 +1,9 @@
 export const LEVELS = [
   { name: 'Iniciante', min: 0, color: '#98A2B3' },
-  { name: 'Explorador', min: 150, color: '#2E90FA' },
-  { name: 'Praticante', min: 400, color: '#12B76A' },
-  { name: 'Especialista', min: 800, color: '#9E77ED' },
-  { name: 'Mestre Pílula', min: 1500, color: '#FDB022' },
+  { name: 'Explorador', min: 100, color: '#2E90FA' },
+  { name: 'Praticante', min: 250, color: '#12B76A' },
+  { name: 'Especialista', min: 500, color: '#9E77ED' },
+  { name: 'Mestre Pílula', min: 1000, color: '#FDB022' },
 ] as const
 
 export function getLevel(points = 0) {

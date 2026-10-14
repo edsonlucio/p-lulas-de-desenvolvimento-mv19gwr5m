@@ -6,14 +6,17 @@ import {
   Camera,
   CheckCircle2,
   Crown,
+  Flame,
   KeyRound,
   LoaderCircle,
+  Lock,
   Mail,
   Medal,
   Save,
   ShieldCheck,
   Sparkles,
   Star,
+  Trophy,
   UserRound,
 } from 'lucide-react'
 
@@ -27,6 +30,11 @@ import { getLevel } from '@/lib/gamification'
 import pb from '@/lib/pocketbase/client'
 import type { PointsLedgerRecord, PointsReason } from '@/lib/types'
 import { listPoints } from '@/services/student'
+import {
+  effectiveStreak,
+  getGamificationSnapshot,
+  type GamificationSnapshot,
+} from '@/services/gamification'
 
 const reasonLabels: Record<PointsReason, string> = {
   boas_vindas: 'Boas-vindas',
@@ -57,6 +65,7 @@ export default function Profile() {
   const [name, setName] = useState(user?.name || '')
   const [newEmail, setNewEmail] = useState('')
   const [ledger, setLedger] = useState<PointsLedgerRecord[]>([])
+  const [gamification, setGamification] = useState<GamificationSnapshot | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState('')
   const [saving, setSaving] = useState(false)
@@ -72,6 +81,12 @@ export default function Profile() {
     if (user) void listPoints(user.id).then(setLedger)
   }, [user])
   useEffect(() => {
+    if (!user) return
+    getGamificationSnapshot(user.id)
+      .then(setGamification)
+      .catch(() => setGamification(null))
+  }, [user])
+  useEffect(() => {
     if (!avatarFile) return
     const url = URL.createObjectURL(avatarFile)
     setAvatarPreview(url)
@@ -80,6 +95,7 @@ export default function Profile() {
   const avatarUrl =
     avatarPreview || (user?.avatar ? pb.files.getURL(user, user.avatar, { thumb: '200x200' }) : '')
   const level = getLevel(user?.points || 0)
+  const streak = effectiveStreak(gamification?.pontuacao ?? null)
   const initials =
     user?.name
       ?.split(' ')
@@ -89,8 +105,8 @@ export default function Profile() {
       .toUpperCase() || 'PD'
   const achievements = useMemo(
     () => [
-      { title: 'Primeiro passo', active: (user?.points || 0) >= 100 },
-      { title: 'Explorador', active: (user?.points || 0) >= 150 },
+      { title: 'Primeiro passo', active: (user?.points || 0) >= 1 },
+      { title: 'Nível 2 — Explorador', active: (user?.points || 0) >= 100 },
       {
         title: 'Módulo completo',
         active: ledger.some((item) => item.reason === 'modulo_concluido'),
@@ -188,6 +204,63 @@ export default function Profile() {
                   {level.remaining} pontos para {level.next.name}
                 </p>
               )}
+            </div>
+            <div className="surface-card p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-extrabold text-brand-navy">Streak</h2>
+                <Flame className="h-4 w-4 text-brand-orange" />
+              </div>
+              <p className="mt-3 text-3xl font-extrabold text-brand-navy">
+                🔥 {streak} {streak === 1 ? 'dia seguido' : 'dias seguidos'}
+              </p>
+              <p className="mt-1 text-[11px] text-brand-muted">
+                {streak === 0
+                  ? 'Conclua uma aula hoje para começar sua sequência.'
+                  : 'Um dia sem estudar reseta a sequência.'}
+              </p>
+            </div>
+            <div className="surface-card p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-extrabold text-brand-navy">Recompensas</h2>
+                <Trophy className="h-4 w-4 text-brand-orange" />
+              </div>
+              <div className="mt-4 space-y-2">
+                {(gamification?.rewardsView ?? []).map((reward) => (
+                  <div
+                    key={reward.code}
+                    className={`flex items-center gap-3 rounded-xl border p-3 ${
+                      reward.unlocked
+                        ? 'border-amber-200 bg-amber-50'
+                        : 'border-brand-border bg-brand-subtle/60'
+                    }`}
+                  >
+                    <span
+                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
+                        reward.unlocked
+                          ? 'bg-amber-100 text-amber-600'
+                          : 'bg-white text-brand-muted/50'
+                      }`}
+                    >
+                      {reward.unlocked ? (
+                        <Award className="h-4 w-4" />
+                      ) : (
+                        <Lock className="h-3.5 w-3.5" />
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <p
+                        className={`truncate text-xs font-extrabold ${
+                          reward.unlocked ? 'text-amber-700' : 'text-brand-muted'
+                        }`}
+                      >
+                        {reward.title}
+                      </p>
+                      <p className="truncate text-[10px] text-brand-muted">{reward.description}</p>
+                    </div>
+                  </div>
+                ))}
+                {!gamification && <p className="text-xs text-brand-muted">Carregando…</p>}
+              </div>
             </div>
             <div className="surface-card p-5">
               <h2 className="text-sm font-extrabold text-brand-navy">Conquistas</h2>

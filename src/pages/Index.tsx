@@ -606,7 +606,9 @@ export default function Index() {
                   )}
                 </span>
                 <p className="mt-3 text-[11px] font-extrabold">{level.name}</p>
-                <p className="mt-1 text-[10px] text-white/40">{level.min} pts</p>
+                <p className="mt-1 text-[10px] text-white/40">
+                  {level.min === 0 ? '0 pts (início)' : `${level.min} pts`}
+                </p>
               </div>
             ))}
           </div>

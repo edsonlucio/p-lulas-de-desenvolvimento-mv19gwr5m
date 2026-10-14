@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { BrandLogo } from '@/components/BrandLogo'
 import { LevelBadge } from '@/components/LevelBadge'
+import { LevelUpCelebration } from '@/components/LevelUpCelebration'
 import { VerifiedBanner } from '@/components/VerifiedBanner'
 import { useAuth } from '@/contexts/AuthContext'
 import pb from '@/lib/pocketbase/client'
@@ -309,6 +310,7 @@ export default function Layout() {
 
       <div className="h-[76px]" aria-hidden="true" />
       <VerifiedBanner />
+      {user && <LevelUpCelebration points={user.points || 0} />}
       <main className="min-h-[70vh]">
         <Outlet />
       </main>

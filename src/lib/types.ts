@@ -102,6 +102,23 @@ export interface PointsLedgerRecord extends RecordModel {
   lesson: string
 }
 
+export type RewardCode = 'primeira_aula' | 'dedicado_7' | 'maratonista_30'
+
+export interface RewardRecord extends RecordModel {
+  user: string
+  code: RewardCode
+  title: string
+  awarded_at: string
+}
+
+export interface PontuacaoRecord extends RecordModel {
+  user: string
+  points: number
+  level: number
+  streak_days: number
+  last_activity_date: string
+}
+
 export interface CourseBundle {
   course: CourseRecord
   modules: Array<ModuleRecord & { lessons: LessonRecord[] }>

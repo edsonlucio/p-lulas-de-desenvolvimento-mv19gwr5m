@@ -6,9 +6,12 @@ import {
   BookOpen,
   ChevronRight,
   Clock3,
+  Flame,
+  Lock,
   Play,
   Search,
   Sparkles,
+  Trophy,
   UserRound,
 } from 'lucide-react'
 
@@ -27,6 +30,11 @@ import type {
 } from '@/lib/types'
 import { formatDuration, getCourseBundle } from '@/services/courses'
 import { listEnrollments, listProgress } from '@/services/student'
+import {
+  effectiveStreak,
+  getGamificationSnapshot,
+  type GamificationSnapshot,
+} from '@/services/gamification'
 import { useRealtime } from '@/hooks/use-realtime'
 
 interface DashboardCourse {
@@ -39,9 +47,14 @@ export default function StudentDashboard() {
   const { user } = useAuth()
   const [items, setItems] = useState<DashboardCourse[]>([])
   const [loading, setLoading] = useState(true)
+  const [gamification, setGamification] = useState<GamificationSnapshot | null>(null)
   const load = useCallback(async () => {
     if (!user) return
-    const enrollments = await listEnrollments(user.id)
+    const [enrollments, snapshot] = await Promise.all([
+      listEnrollments(user.id),
+      getGamificationSnapshot(user.id).catch(() => null),
+    ])
+    setGamification(snapshot)
     const loaded = await Promise.all(
       enrollments.map(async (enrollment) => {
         const course = await import('@/lib/pocketbase/client').then(({ default: pb }) =>
@@ -244,6 +257,20 @@ export default function StudentDashboard() {
                   <span className="text-sm font-bold text-white/60">Meus pontos</span>
                   <Award className="h-5 w-5 text-brand-orange" />
                 </div>
+                {(() => {
+                  const streak = effectiveStreak(gamification?.pontuacao ?? null)
+                  return streak > 0 ? (
+                    <div className="mt-4 flex items-center gap-2 rounded-xl bg-brand-orange/15 px-3 py-2 text-sm font-extrabold text-amber-200">
+                      <Flame className="h-4 w-4" />
+                      {streak} {streak === 1 ? 'dia seguido' : 'dias seguidos'}
+                    </div>
+                  ) : (
+                    <p className="mt-4 flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-xs font-semibold text-white/60">
+                      <Flame className="h-4 w-4" />
+                      Complete uma aula hoje e comece sua sequência de dias.
+                    </p>
+                  )
+                })()}
                 <div className="mt-6 flex items-center gap-5">
                   <div
                     className="relative grid h-24 w-24 place-items-center rounded-full"
@@ -285,6 +312,53 @@ export default function StudentDashboard() {
                 >
                   Ver histórico de pontos <ArrowRight className="h-4 w-4 text-brand-orange" />
                 </Link>
+              </div>
+            </div>
+            <div className="surface-card p-5">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-brand-orange">
+                  Recompensas
+                </p>
+                <Trophy className="h-4 w-4 text-brand-orange" />
+              </div>
+              <div className="mt-4 space-y-2">
+                {(gamification?.rewardsView ?? []).map((reward) => (
+                  <div
+                    key={reward.code}
+                    className={`flex items-center gap-3 rounded-xl border p-3 ${
+                      reward.unlocked
+                        ? 'border-amber-200 bg-amber-50'
+                        : 'border-brand-border bg-brand-subtle/60'
+                    }`}
+                  >
+                    <span
+                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
+                        reward.unlocked
+                          ? 'bg-amber-100 text-amber-600'
+                          : 'bg-white text-brand-muted/50'
+                      }`}
+                    >
+                      {reward.unlocked ? (
+                        <Award className="h-4 w-4" />
+                      ) : (
+                        <Lock className="h-3.5 w-3.5" />
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <p
+                        className={`truncate text-xs font-extrabold ${
+                          reward.unlocked ? 'text-amber-700' : 'text-brand-muted'
+                        }`}
+                      >
+                        {reward.title}
+                      </p>
+                      <p className="truncate text-[10px] text-brand-muted">{reward.description}</p>
+                    </div>
+                  </div>
+                ))}
+                {!gamification && (
+                  <p className="text-xs text-brand-muted">Carregando conquistas…</p>
+                )}
               </div>
             </div>
             <div className="surface-card p-5">

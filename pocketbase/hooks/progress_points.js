@@ -91,7 +91,7 @@ onRecordAfterCreateSuccess((e) => {
       if (!existing.length) {
         const entry = new Record($app.findCollectionByNameOrId('points_ledger'))
         entry.set('user', userId)
-        entry.set('amount', 200)
+        entry.set('amount', 50)
         entry.set('reason', 'curso_concluido')
         entry.set('description', description)
         $app.save(entry)
@@ -206,7 +206,7 @@ onRecordAfterUpdateSuccess((e) => {
       if (!existing.length) {
         const entry = new Record($app.findCollectionByNameOrId('points_ledger'))
         entry.set('user', userId)
-        entry.set('amount', 200)
+        entry.set('amount', 50)
         entry.set('reason', 'curso_concluido')
         entry.set('description', description)
         $app.save(entry)

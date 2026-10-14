@@ -120,3 +120,27 @@ export interface SearchResult {
   module: { id: string; title: string }
   course: { id: string; title: string; slug: string }
 }
+
+export type ClubMemberStatus = 'ativo' | 'inativo'
+export type ClubCardStatus = 'rascunho' | 'agendado' | 'enviado'
+
+export interface ClubMemberRecord extends RecordModel {
+  user: string
+  joined_at: string
+  status: ClubMemberStatus
+  notes?: string
+  expand?: {
+    user?: UserRecord
+  }
+}
+
+export interface ClubDailyCardRecord extends RecordModel {
+  date: string
+  title?: string
+  pages_from?: number
+  pages_to?: number
+  pergunta: string
+  resumo: string
+  provocacao: string
+  status: ClubCardStatus
+}

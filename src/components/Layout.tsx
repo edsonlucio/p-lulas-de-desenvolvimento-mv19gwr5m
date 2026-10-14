@@ -47,6 +47,7 @@ const adminLinks = [
   { label: 'Cursos', href: '/admin/cursos' },
   { label: 'Alunos', href: '/admin/alunos' },
   { label: 'Pedidos', href: '/admin/pedidos' },
+  { label: 'Clube das Pílulas', href: '/admin/clube' },
 ]
 
 export default function Layout() {

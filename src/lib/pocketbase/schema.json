@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T02:27:17.955Z",
+  "generatedAt": "2026-10-14T02:52:25.388Z",
   "collections": [
     {
       "name": "users",
@@ -698,6 +698,144 @@
         "CREATE INDEX idx_search_chunks_lesson ON search_chunks (lesson)",
         "CREATE INDEX idx_search_chunks_course ON search_chunks (course)",
         "CREATE INDEX idx_search_chunks_lesson_posicao ON search_chunks (lesson, posicao)"
+      ]
+    },
+    {
+      "name": "club_members",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = \"admin\"",
+        "view": "@request.auth.role = \"admin\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "joined_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["ativo", "inativo"]
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_club_members_user ON club_members (user)",
+        "CREATE INDEX idx_club_members_status ON club_members (status)",
+        "CREATE INDEX idx_club_members_joined ON club_members (joined_at DESC)"
+      ]
+    },
+    {
+      "name": "club_daily_cards",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = \"admin\"",
+        "view": "@request.auth.role = \"admin\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "pages_from",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "pages_to",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "pergunta",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "resumo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "provocacao",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["rascunho", "agendado", "enviado"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_club_daily_cards_date ON club_daily_cards (date)",
+        "CREATE INDEX idx_club_daily_cards_status ON club_daily_cards (status)"
       ]
     }
   ]

@@ -17,6 +17,7 @@ import PasswordRecovery from '@/pages/PasswordRecovery'
 import Register from '@/pages/Register'
 import ResetPassword from '@/pages/ResetPassword'
 import VerifyEmail from '@/pages/VerifyEmail'
+import AdminClub from '@/pages/admin/AdminClub'
 import AdminCourses from '@/pages/admin/AdminCourses'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import AdminOrders from '@/pages/admin/AdminOrders'
@@ -125,7 +126,15 @@ export default function App() {
                   </RouteGuard>
                 }
               />
-            </Route>
+              <Route
+                path="clube"
+                element={
+                  <RouteGuard admin>
+                    <AdminClub />
+                  </RouteGuard>
+                }
+              />
+            </Route>{' '}
             <Route path="404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Route>

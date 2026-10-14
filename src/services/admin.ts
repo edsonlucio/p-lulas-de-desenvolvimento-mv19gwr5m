@@ -8,7 +8,7 @@ import type {
 } from '@/lib/types'
 
 export async function getAdminSnapshot() {
-  const [users, enrollments, orders, progress] = await Promise.all([
+  const [users, enrollments, orders, progress, allProgress] = await Promise.all([
     pb
       .collection<UserRecord>('users')
       .getFullList({ filter: 'role = "student"', sort: '-created' }),
@@ -17,8 +17,9 @@ export async function getAdminSnapshot() {
     pb
       .collection<LessonProgressRecord>('lesson_progress')
       .getFullList({ filter: 'completed = true' }),
+    pb.collection<LessonProgressRecord>('lesson_progress').getFullList({ sort: '-updated' }),
   ])
-  return { users, enrollments, orders, progress }
+  return { users, enrollments, orders, progress, allProgress }
 }
 
 export async function createCourse(data: FormData | Record<string, unknown>) {

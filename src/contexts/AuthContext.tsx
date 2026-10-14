@@ -52,23 +52,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void refreshUser().finally(() => setLoading(false))
-    const unsubscribe = pb.authStore.onChange((_token, record) =>
-      setUser(record as UserRecord | null),
-    )
+    const unsubscribe = pb.authStore.onChange((_token, record) => {
+      // Whenever authorization changes (login, logout, refresh), tear down the
+      // existing realtime connection so subsequent subscriptions open a fresh SSE
+      // handshake bound to the current token rather than keeping stale auth.
+      try {
+        void pb.realtime.unsubscribe()
+      } catch {
+        /* safe to ignore if not connected */
+      }
+      setUser(record as UserRecord | null)
+    })
     return unsubscribe
   }, [refreshUser])
 
   useEffect(() => {
     if (!user?.id) return
     let unsubscribe: (() => Promise<void>) | undefined
-    pb.collection<UserRecord>('users')
-      .subscribe(user.id, ({ record }) => setUser(record))
-      .then((fn) => {
-        unsubscribe = fn
-      })
-      .catch(() => {})
+    let cancelled = false
+
+    const subscribeUser = async () => {
+      try {
+        const fn = await pb.collection<UserRecord>('users').subscribe(user.id, ({ record }) => {
+          setUser(record)
+        })
+        if (cancelled) {
+          void fn().catch(() => {})
+        } else {
+          unsubscribe = fn
+        }
+      } catch (err) {
+        const isAuthMismatch =
+          err instanceof Error &&
+          (err.message.includes("authorization don't match") ||
+            (err as { status?: number }).status === 403)
+        if (isAuthMismatch) {
+          try {
+            await pb.realtime.unsubscribe()
+            if (!cancelled) {
+              const retryFn = await pb
+                .collection<UserRecord>('users')
+                .subscribe(user.id, ({ record }) => {
+                  setUser(record)
+                })
+              if (cancelled) {
+                void retryFn().catch(() => {})
+              } else {
+                unsubscribe = retryFn
+              }
+            }
+          } catch (retryErr) {
+            console.warn('[Realtime] Failed to subscribe to user updates:', retryErr)
+          }
+        } else {
+          console.warn('[Realtime] User subscription error:', err)
+        }
+      }
+    }
+
+    void subscribeUser()
+
     return () => {
-      void unsubscribe?.()
+      cancelled = true
+      void unsubscribe?.().catch(() => {})
     }
   }, [user?.id])
 
@@ -99,6 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return record
       },
       logout: () => {
+        try {
+          void pb.realtime.unsubscribe()
+        } catch {
+          /* safe to ignore */
+        }
         pb.authStore.clear()
         setUser(null)
       },

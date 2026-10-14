@@ -105,7 +105,7 @@ export default function CourseDetail() {
                 onClick={action}
                 className="pill-button bg-brand-orange px-7 hover:bg-brand-orange-dark"
               >
-                {enrolled ? 'Continuar assistindo' : 'Comprar agora'}{' '}
+                {enrolled ? 'Continuar assistindo' : 'Quero me matricular'}{' '}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -240,7 +240,7 @@ export default function CourseDetail() {
                   onClick={action}
                   className="pill-button mt-6 w-full bg-brand-orange hover:bg-brand-orange-dark"
                 >
-                  {enrolled ? 'Continuar assistindo' : 'Comprar agora'}{' '}
+                  {enrolled ? 'Continuar assistindo' : 'Quero me matricular'}{' '}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <div className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-brand-muted">
@@ -261,7 +261,7 @@ export default function CourseDetail() {
             onClick={action}
             className="pill-button flex-1 bg-brand-orange hover:bg-brand-orange-dark"
           >
-            {enrolled ? 'Continuar' : 'Comprar'} <ArrowRight className="ml-2 h-4 w-4" />
+            {enrolled ? 'Continuar' : 'Quero me matricular'} <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </div>

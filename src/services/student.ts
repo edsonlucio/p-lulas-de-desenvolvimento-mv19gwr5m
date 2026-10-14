@@ -72,10 +72,22 @@ export async function createPendingOrder(
   courseId: string,
   amount: number,
   method: 'pix' | 'cartao',
+  extra?: { kiwify_order_id?: string; kiwify_order_ref?: string },
 ) {
-  return pb
-    .collection<OrderRecord>('orders')
-    .create({ user: userId, course: courseId, amount, method, status: 'pending' })
+  return pb.collection<OrderRecord>('orders').create({
+    user: userId,
+    course: courseId,
+    amount,
+    method,
+    status: 'pending',
+    ...extra,
+  })
+}
+
+export async function getOrderById(orderId: string) {
+  return pb.collection<OrderRecord>('orders').getOne(orderId, {
+    expand: 'user,course',
+  })
 }
 
 export async function confirmOrder(orderId: string) {

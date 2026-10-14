@@ -59,6 +59,14 @@ export default function App() {
                 </RouteGuard>
               }
             />
+            <Route
+              path="retorno"
+              element={
+                <RouteGuard>
+                  <OrderSuccess />
+                </RouteGuard>
+              }
+            />
             <Route path="app">
               <Route
                 index

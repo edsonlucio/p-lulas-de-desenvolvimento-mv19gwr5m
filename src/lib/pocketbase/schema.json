@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T03:17:37.289Z",
+  "generatedAt": "2026-10-14T03:45:06.434Z",
   "collections": [
     {
       "name": "users",
@@ -131,6 +131,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "kiwify_checkout_url",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -459,7 +465,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["pending", "paid", "cancelled"]
+          "selectValues": ["pending", "paid", "cancelled", "falhou", "expirado"]
         },
         {
           "name": "created",
@@ -474,6 +480,36 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "paid_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "failed_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "expired_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "kiwify_order_id",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "kiwify_order_ref",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1009,6 +1045,125 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_rewards_user_code ON rewards (user, code)"]
+    },
+    {
+      "name": "webhook_settings",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = \"admin\"",
+        "view": "@request.auth.role = \"admin\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "token",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_webhook_settings_name ON webhook_settings (name)"]
+    },
+    {
+      "name": "webhook_logs",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = \"admin\"",
+        "view": "@request.auth.role = \"admin\"",
+        "create": null,
+        "update": null,
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "source",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "event_type",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "token_valid",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "order_id_found",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_result",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "payload_summary",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "error_message",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_webhook_logs_source ON webhook_logs (source)",
+        "CREATE INDEX idx_webhook_logs_created ON webhook_logs (created DESC)"
+      ]
     }
   ]
 }

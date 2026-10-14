@@ -21,6 +21,7 @@ export interface CourseRecord extends RecordModel {
   price: number
   thumbnail: string
   published: boolean
+  kiwify_checkout_url?: string
 }
 
 export interface ModuleRecord extends RecordModel {
@@ -79,12 +80,27 @@ export interface LessonProgressRecord extends RecordModel {
   current_minute: number
 }
 
+export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'falhou' | 'expirado'
+
 export interface OrderRecord extends RecordModel {
   user: string
   course: string
   amount: number
   method: 'pix' | 'cartao'
-  status: 'pending' | 'paid' | 'cancelled'
+  status: OrderStatus
+  paid_at?: string
+  failed_at?: string
+  expired_at?: string
+  kiwify_order_id?: string
+  kiwify_order_ref?: string
+}
+
+export interface WebhookConfig {
+  name: string
+  token: string
+  is_active: boolean
+  record_id?: string
+  webhook_path: string
 }
 
 export type PointsReason =

@@ -109,3 +109,28 @@ export async function changeStudentPassword(studentId: string, newPassword: stri
     },
   })
 }
+
+export async function getWebhookConfig() {
+  return pb.send<{
+    name: string
+    token: string
+    is_active: boolean
+    record_id: string
+    webhook_path: string
+  }>('/backend/v1/admin/webhook-config', {
+    method: 'GET',
+  })
+}
+
+export async function updateWebhookConfig(data: { token: string; is_active?: boolean }) {
+  return pb.send<{
+    success: boolean
+    message: string
+    token: string
+    is_active: boolean
+    webhook_path: string
+  }>('/backend/v1/admin/webhook-config', {
+    method: 'POST',
+    body: data,
+  })
+}

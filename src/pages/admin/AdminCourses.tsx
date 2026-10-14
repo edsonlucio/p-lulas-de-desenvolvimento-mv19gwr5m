@@ -90,6 +90,7 @@ export default function AdminCourses() {
     price: '297',
     category: 'marketing',
     published: false,
+    kiwify_checkout_url: '',
   })
   const [thumbnail, setThumbnail] = useState<File | null>(null)
 
@@ -149,6 +150,7 @@ export default function AdminCourses() {
             price: String(record.price),
             category: record.category,
             published: record.published,
+            kiwify_checkout_url: record.kiwify_checkout_url || '',
           }
         : {
             title: '',
@@ -158,6 +160,7 @@ export default function AdminCourses() {
             price: '297',
             category: 'marketing',
             published: false,
+            kiwify_checkout_url: '',
           },
     )
     setThumbnail(null)
@@ -459,6 +462,26 @@ export default function AdminCourses() {
                       <SelectItem value="motivacional">Motivacional</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="sm:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Link de checkout Kiwify</Label>
+                    <span className="text-[11px] text-brand-muted">
+                      Opcional (ex: https://pay.kiwify.com.br/...)
+                    </span>
+                  </div>
+                  <Input
+                    className="mt-2"
+                    type="url"
+                    placeholder="https://pay.kiwify.com.br/seu-produto"
+                    value={form.kiwify_checkout_url}
+                    onChange={(e) => setForm({ ...form, kiwify_checkout_url: e.target.value })}
+                  />
+                  <p className="mt-1 text-[11px] text-brand-muted">
+                    Quando configurado, o botão "Quero me matricular" direciona o aluno para pagar
+                    diretamente no checkout da Kiwify. Se vazio, utiliza o checkout simulado
+                    demonstrativo.
+                  </p>
                 </div>
                 <div className="sm:col-span-2">
                   <Label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-brand-border p-4">

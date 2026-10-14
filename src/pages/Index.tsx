@@ -27,6 +27,7 @@ import {
   Zap,
 } from 'lucide-react'
 
+import edsonLucioPhoto from '@/assets/editedimage1781700536492-copia-dfd97.png'
 import clubeLogo from '@/assets/imagemgerada1789555881046-08982.png'
 import { Button } from '@/components/ui/button'
 import { CourseCover } from '@/components/CourseCover'
@@ -518,7 +519,7 @@ export default function Index() {
             <div className="absolute -inset-5 rotate-[-3deg] rounded-[32px] bg-brand-orange/10" />
             <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] bg-brand-navy">
               <img
-                src="https://img.usecurling.com/ppl/large?gender=male&seed=314"
+                src={edsonLucioPhoto}
                 alt="Edson Lúcio, mentor da Pílulas de Desenvolvimento"
                 className="h-full w-full object-cover object-top opacity-90"
               />

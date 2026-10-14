@@ -177,10 +177,19 @@ export default function Layout() {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {user.role === 'admin' && (
-                      <DropdownMenuItem onClick={() => navigate('/admin')} className="rounded-xl">
-                        <ShieldCheck className="mr-2 h-4 w-4" />
-                        Painel Admin
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem onClick={() => navigate('/admin')} className="rounded-xl">
+                          <ShieldCheck className="mr-2 h-4 w-4" />
+                          Painel Admin
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => navigate('/app/perfil#seguranca')}
+                          className="rounded-xl font-medium"
+                        >
+                          <ShieldCheck className="mr-2 h-4 w-4 text-brand-orange" />
+                          Minha senha
+                        </DropdownMenuItem>
+                      </>
                     )}
                     <DropdownMenuItem
                       onClick={() => navigate('/app/perfil')}

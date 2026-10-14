@@ -49,6 +49,20 @@ export async function createModule(courseId: string, title: string, position: nu
   })
 }
 
+export async function updateModule(id: string, data: { title?: string; position?: number }) {
+  return pb.collection('modules').update(id, data)
+}
+
+export async function deleteModule(id: string) {
+  return pb.collection('modules').delete(id)
+}
+
+export async function reorderModules(updates: Array<{ id: string; position: number }>) {
+  for (const item of updates) {
+    await pb.collection('modules').update(item.id, { position: item.position })
+  }
+}
+
 export async function createLesson(data: {
   module: string
   title: string
@@ -59,6 +73,7 @@ export async function createLesson(data: {
   is_free?: boolean
   situacao?: 'ativo' | 'inativo'
   transcript?: string
+  transcricao?: string
 }) {
   return pb.collection('lessons').create(data)
 }
@@ -69,4 +84,20 @@ export async function updateLesson(id: string, data: Partial<Record<string, unkn
 
 export async function deleteLesson(id: string) {
   return pb.collection('lessons').delete(id)
+}
+
+export async function reorderLessons(updates: Array<{ id: string; position: number }>) {
+  for (const item of updates) {
+    await pb.collection('lessons').update(item.id, { position: item.position })
+  }
+}
+
+export async function changeStudentPassword(studentId: string, newPassword: string) {
+  return pb.send<{ success: boolean; message: string }>('/backend/v1/admin/alterar-senha-aluno', {
+    method: 'POST',
+    body: {
+      studentId,
+      newPassword,
+    },
+  })
 }

@@ -38,7 +38,16 @@ export interface LessonRecord extends RecordModel {
   position: number
   is_free: boolean
   situacao: 'ativo' | 'inativo'
-  transcript: string
+  transcript?: string
+  transcricao?: string
+}
+
+export interface SearchChunkRecord extends RecordModel {
+  course: string
+  lesson: string
+  posicao: number
+  texto: string
+  caracteres?: number
 }
 
 export type MaterialType = 'arquivo' | 'link'

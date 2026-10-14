@@ -139,11 +139,13 @@ export default function CoursePlayer() {
     getCourseBundle(slug)
       .then(async (data) => {
         const enrolled = await findEnrollment(user.id, data.course.id)
-        if (!enrolled) {
+        // Se for admin, permitir visualizar o curso como observador mesmo sem matrícula
+        const isAdmin = user.role === 'admin'
+        if (!enrolled && !isAdmin) {
           navigate(`/cursos/${slug}`, { replace: true })
           return
         }
-        const userProgress = await listProgress(user.id, data.course.id)
+        const userProgress = enrolled ? await listProgress(user.id, data.course.id) : []
         const lessons = data.modules.flatMap((m) => m.lessons)
         const requested = lessons.find((l) => l.id === params.get('aula'))
         const unfinished = userProgress.find(
@@ -305,13 +307,20 @@ export default function CoursePlayer() {
         <main className="min-w-0">
           <div className="border-b border-white/10 px-5 py-4 sm:px-8">
             <div className="mx-auto flex max-w-5xl items-center justify-between">
-              <Link
-                to="/app"
-                className="flex items-center gap-2 text-sm font-bold text-white/60 hover:text-white"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Meus cursos
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  to={user?.role === 'admin' ? '/admin/cursos' : '/app'}
+                  className="flex items-center gap-2 text-sm font-bold text-white/60 hover:text-white"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {user?.role === 'admin' ? 'Voltar ao Admin' : 'Meus cursos'}
+                </Link>
+                {user?.role === 'admin' && (
+                  <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-bold text-amber-300 border border-amber-500/30">
+                    Modo Observador (Admin)
+                  </span>
+                )}
+              </div>
               <span className="hidden text-xs font-semibold text-white/40 sm:block">
                 {bundle.course.title}
               </span>

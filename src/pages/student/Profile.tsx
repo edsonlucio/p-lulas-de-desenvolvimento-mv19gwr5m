@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Award,
   BookOpenCheck,
@@ -45,6 +46,14 @@ const reasonIcons: Record<PointsReason, typeof Star> = {
 export default function Profile() {
   const { user, refreshUser, logout } = useAuth()
   const { toast } = useToast()
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState(
+    location.hash === '#seguranca'
+      ? 'seguranca'
+      : location.hash === '#trilha'
+        ? 'trilha'
+        : 'perfil',
+  )
   const [name, setName] = useState(user?.name || '')
   const [newEmail, setNewEmail] = useState('')
   const [ledger, setLedger] = useState<PointsLedgerRecord[]>([])
@@ -53,6 +62,12 @@ export default function Profile() {
   const [saving, setSaving] = useState(false)
   const [passwords, setPasswords] = useState({ old: '', password: '', confirm: '' })
   const [emailSent, setEmailSent] = useState(false)
+
+  useEffect(() => {
+    if (location.hash === '#seguranca') setActiveTab('seguranca')
+    else if (location.hash === '#trilha') setActiveTab('trilha')
+  }, [location.hash])
+
   useEffect(() => {
     if (user) void listPoints(user.id).then(setLedger)
   }, [user])
@@ -196,7 +211,7 @@ export default function Profile() {
               </span>
               <h1 className="section-title mt-3">Perfil e trilha</h1>
             </div>
-            <Tabs defaultValue="perfil">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="mb-6 h-auto flex-wrap rounded-2xl bg-white p-1.5 shadow-card">
                 <TabsTrigger value="perfil" className="rounded-xl px-5 py-2.5">
                   Perfil

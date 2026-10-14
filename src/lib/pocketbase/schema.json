@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T02:06:46.606Z",
+  "generatedAt": "2026-10-14T02:27:17.955Z",
   "collections": [
     {
       "name": "users",
@@ -270,6 +270,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "transcricao",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -628,6 +634,70 @@
         "CREATE INDEX idx_materials_lesson ON lesson_materials (lesson)",
         "CREATE INDEX idx_materials_sort ON lesson_materials (lesson, sort)",
         "CREATE INDEX idx_materials_situacao ON lesson_materials (situacao)"
+      ]
+    },
+    {
+      "name": "search_chunks",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = \"admin\"",
+        "view": "@request.auth.role = \"admin\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "course",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "courses"
+        },
+        {
+          "name": "lesson",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "lessons"
+        },
+        {
+          "name": "posicao",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "texto",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "caracteres",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_search_chunks_lesson ON search_chunks (lesson)",
+        "CREATE INDEX idx_search_chunks_course ON search_chunks (course)",
+        "CREATE INDEX idx_search_chunks_lesson_posicao ON search_chunks (lesson, posicao)"
       ]
     }
   ]

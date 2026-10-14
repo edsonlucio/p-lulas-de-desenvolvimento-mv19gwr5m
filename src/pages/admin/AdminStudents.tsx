@@ -1,8 +1,27 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ArrowDownAZ, Award, Search, Sparkles, UsersRound } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import {
+  ArrowDownAZ,
+  Award,
+  KeyRound,
+  LoaderCircle,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  UsersRound,
+} from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -10,16 +29,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
 import { getLevel } from '@/lib/gamification'
 import pb from '@/lib/pocketbase/client'
 import type { EnrollmentRecord, UserRecord } from '@/lib/types'
-import { listStudents } from '@/services/admin'
+import { changeStudentPassword, listStudents } from '@/services/admin'
 
 export default function AdminStudents() {
+  const { toast } = useToast()
   const [students, setStudents] = useState<UserRecord[]>([])
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([])
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('recentes')
+
+  // Modal de alterar senha do aluno
+  const [passwordTarget, setPasswordTarget] = useState<UserRecord | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
   useEffect(() => {
     Promise.all([
       listStudents(),
@@ -86,6 +113,7 @@ export default function AdminStudents() {
                   <th>Pontos</th>
                   <th>Cursos</th>
                   <th>Cadastro</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -141,6 +169,21 @@ export default function AdminStudents() {
                       <td className="text-brand-muted">
                         {new Date(student.created).toLocaleDateString('pt-BR')}
                       </td>
+                      <td>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full border-brand-border hover:border-brand-orange hover:text-brand-orange"
+                          onClick={() => {
+                            setPasswordTarget(student)
+                            setNewPassword('')
+                            setConfirmPassword('')
+                          }}
+                        >
+                          <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+                          Alterar senha
+                        </Button>
+                      </td>
                     </tr>
                   )
                 })}
@@ -148,6 +191,124 @@ export default function AdminStudents() {
             </table>
           </div>
         </div>
+
+        {/* Modal para Alterar Senha do Aluno */}
+        <Dialog open={!!passwordTarget} onOpenChange={(open) => !open && setPasswordTarget(null)}>
+          <DialogContent className="max-w-md rounded-3xl">
+            <DialogHeader>
+              <div className="flex items-center gap-2 text-xs font-bold text-brand-orange">
+                <ShieldCheck className="h-4 w-4" />
+                <span>Gestão de Acesso</span>
+              </div>
+              <DialogTitle className="text-xl font-extrabold text-brand-navy">
+                Alterar senha do aluno
+              </DialogTitle>
+              <DialogDescription>
+                Defina uma nova senha para <strong>{passwordTarget?.name}</strong> (
+                {passwordTarget?.email}).
+              </DialogDescription>
+            </DialogHeader>
+
+            <form
+              onSubmit={async (e: FormEvent) => {
+                e.preventDefault()
+                if (!passwordTarget) return
+                if (newPassword.length < 6) {
+                  return toast({
+                    title: 'Senha muito curta',
+                    description: 'A nova senha deve ter no mínimo 6 caracteres.',
+                    variant: 'destructive',
+                  })
+                }
+                if (newPassword !== confirmPassword) {
+                  return toast({
+                    title: 'Senhas não conferem',
+                    description: 'A confirmação deve ser idêntica à nova senha.',
+                    variant: 'destructive',
+                  })
+                }
+
+                setChangingPassword(true)
+                try {
+                  const res = await changeStudentPassword(passwordTarget.id, newPassword)
+                  toast({
+                    title: 'Senha alterada com sucesso',
+                    description: res.message || `A senha de ${passwordTarget.name} foi atualizada.`,
+                  })
+                  setPasswordTarget(null)
+                  setNewPassword('')
+                  setConfirmPassword('')
+                } catch (err: unknown) {
+                  const errMessage =
+                    (err as { data?: { message?: string }; message?: string })?.data?.message ||
+                    (err as Error)?.message ||
+                    'Não foi possível atualizar a senha.'
+                  toast({
+                    title: 'Erro ao alterar senha',
+                    description: errMessage,
+                    variant: 'destructive',
+                  })
+                } finally {
+                  setChangingPassword(false)
+                }
+              }}
+              className="mt-3 space-y-4"
+            >
+              <div>
+                <Label htmlFor="student-new-password">Nova senha (mínimo 6 caracteres)</Label>
+                <Input
+                  id="student-new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-2 rounded-xl"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="student-confirm-password">Confirmar nova senha</Label>
+                <Input
+                  id="student-confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-2 rounded-xl"
+                  required
+                />
+              </div>
+
+              <div className="rounded-xl bg-brand-subtle p-3 text-xs text-brand-muted">
+                Dica: O aluno poderá entrar imediatamente com esta nova senha e alterá-la depois em
+                sua área de perfil.
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => setPasswordTarget(null)}
+                  disabled={changingPassword}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={changingPassword}
+                  className="rounded-full bg-brand-orange hover:bg-brand-orange-dark text-white font-bold"
+                >
+                  {changingPassword && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                  Confirmar nova senha
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

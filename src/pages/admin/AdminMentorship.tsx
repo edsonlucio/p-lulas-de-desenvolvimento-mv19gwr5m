@@ -53,10 +53,9 @@ export default function AdminMentorship() {
     description: '',
     price: 0,
     active: true,
-    weekly_day: '',
-    weekly_time: '',
-    meeting_link: '',
-    whatsapp_support: '',
+    meeting_cadence: '',
+    meeting_schedule: '',
+    contact_whatsapp: '',
   })
 
   // Modal de Sessão
@@ -65,15 +64,14 @@ export default function AdminMentorship() {
   const [savingSession, setSavingSession] = useState(false)
   const [sessionForm, setSessionForm] = useState({
     title: '',
-    description: '',
-    scheduled_at: '',
+    summary: '',
+    date: '',
     cohort_name: 'Turma Semanal',
-    is_next: false,
-    status: 'scheduled' as MentorshipSessionRecord['status'],
-    meeting_url: '',
-    recording_url: '',
-    application_material_url: '',
-    application_material_title: '',
+    status: 'proximo' as MentorshipSessionRecord['status'],
+    live_meeting_url: '',
+    video_url: '',
+    material_url: '',
+    material_title: '',
   })
 
   useEffect(() => {
@@ -83,10 +81,7 @@ export default function AdminMentorship() {
   async function loadData() {
     setLoading(true)
     try {
-      const [prod, sess] = await Promise.all([
-        getMentorshipProduct(),
-        listMentorshipSessions(false),
-      ])
+      const [prod, sess] = await Promise.all([getMentorshipProduct(), listMentorshipSessions()])
       if (prod) {
         setProduct(prod)
         setProductForm({
@@ -95,10 +90,9 @@ export default function AdminMentorship() {
           description: prod.description || '',
           price: prod.price || 0,
           active: prod.active ?? true,
-          weekly_day: prod.weekly_day || '',
-          weekly_time: prod.weekly_time || '',
-          meeting_link: prod.meeting_link || '',
-          whatsapp_support: prod.whatsapp_support || '',
+          meeting_cadence: prod.meeting_cadence || '',
+          meeting_schedule: prod.meeting_schedule || '',
+          contact_whatsapp: prod.contact_whatsapp || '',
         })
       }
       setSessions(sess)
@@ -124,10 +118,9 @@ export default function AdminMentorship() {
         description: productForm.description,
         price: Number(productForm.price),
         active: productForm.active,
-        weekly_day: productForm.weekly_day,
-        weekly_time: productForm.weekly_time,
-        meeting_link: productForm.meeting_link,
-        whatsapp_support: productForm.whatsapp_support,
+        meeting_cadence: productForm.meeting_cadence,
+        meeting_schedule: productForm.meeting_schedule,
+        contact_whatsapp: productForm.contact_whatsapp,
       })
       setProduct(updated)
       toast({
@@ -152,15 +145,14 @@ export default function AdminMentorship() {
     nextDate.setHours(20, 0, 0, 0)
     setSessionForm({
       title: '',
-      description: '',
-      scheduled_at: nextDate.toISOString().slice(0, 16),
+      summary: '',
+      date: nextDate.toISOString().slice(0, 16),
       cohort_name: 'Turma Semanal',
-      is_next: false,
-      status: 'scheduled',
-      meeting_url: product?.meeting_link || '',
-      recording_url: '',
-      application_material_url: '',
-      application_material_title: 'Material Prático em PDF',
+      status: 'proximo',
+      live_meeting_url: '',
+      video_url: '',
+      material_url: '',
+      material_title: 'Material Prático em PDF',
     })
     setSessionModalOpen(true)
   }
@@ -169,21 +161,20 @@ export default function AdminMentorship() {
     setEditingSession(s)
     let formattedDate = ''
     try {
-      formattedDate = new Date(s.scheduled_at).toISOString().slice(0, 16)
+      formattedDate = new Date(s.date).toISOString().slice(0, 16)
     } catch {
       formattedDate = ''
     }
     setSessionForm({
       title: s.title,
-      description: s.description || '',
-      scheduled_at: formattedDate,
+      summary: s.summary || '',
+      date: formattedDate,
       cohort_name: s.cohort_name || 'Turma Semanal',
-      is_next: s.is_next,
       status: s.status,
-      meeting_url: s.meeting_url || '',
-      recording_url: s.recording_url || '',
-      application_material_url: s.application_material_url || '',
-      application_material_title: s.application_material_title || '',
+      live_meeting_url: s.live_meeting_url || '',
+      video_url: s.video_url || '',
+      material_url: s.material_url || '',
+      material_title: s.material_title || '',
     })
     setSessionModalOpen(true)
   }
@@ -192,17 +183,16 @@ export default function AdminMentorship() {
     e.preventDefault()
     setSavingSession(true)
     try {
-      const payload = {
+      const payload: Partial<MentorshipSessionRecord> = {
         title: sessionForm.title,
-        description: sessionForm.description,
-        scheduled_at: new Date(sessionForm.scheduled_at).toISOString(),
+        summary: sessionForm.summary,
+        date: new Date(sessionForm.date).toISOString(),
         cohort_name: sessionForm.cohort_name,
-        is_next: sessionForm.is_next,
         status: sessionForm.status,
-        meeting_url: sessionForm.meeting_url,
-        recording_url: sessionForm.recording_url,
-        application_material_url: sessionForm.application_material_url,
-        application_material_title: sessionForm.application_material_title,
+        live_meeting_url: sessionForm.live_meeting_url,
+        video_url: sessionForm.video_url,
+        material_url: sessionForm.material_url,
+        material_title: sessionForm.material_title,
       }
 
       if (editingSession) {
@@ -305,21 +295,27 @@ export default function AdminMentorship() {
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-brand-navy">Dia e Horário Semanal</Label>
-              <div className="grid grid-cols-2 gap-2 mt-1.5">
-                <Input
-                  placeholder="Ex: Toda Terça-feira"
-                  value={productForm.weekly_day}
-                  onChange={(e) => setProductForm({ ...productForm, weekly_day: e.target.value })}
-                  className="rounded-xl border-brand-border bg-white text-xs"
-                />
-                <Input
-                  placeholder="Ex: 20h00 às 21h30"
-                  value={productForm.weekly_time}
-                  onChange={(e) => setProductForm({ ...productForm, weekly_time: e.target.value })}
-                  className="rounded-xl border-brand-border bg-white text-xs"
-                />
-              </div>
+              <Label className="text-xs font-bold text-brand-navy">Cadência dos Encontros</Label>
+              <Input
+                placeholder="Ex: Uma turma por semana"
+                value={productForm.meeting_cadence}
+                onChange={(e) =>
+                  setProductForm({ ...productForm, meeting_cadence: e.target.value })
+                }
+                className="mt-1.5 rounded-xl border-brand-border bg-white text-xs"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <Label className="text-xs font-bold text-brand-navy">Horário Oficial / Agenda</Label>
+              <Input
+                placeholder="Ex: Toda terça-feira às 20h00 (horário de Brasília)"
+                value={productForm.meeting_schedule}
+                onChange={(e) =>
+                  setProductForm({ ...productForm, meeting_schedule: e.target.value })
+                }
+                className="mt-1.5 rounded-xl border-brand-border bg-white text-xs"
+              />
             </div>
 
             <div className="sm:col-span-2">
@@ -341,27 +337,15 @@ export default function AdminMentorship() {
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
               <Label className="text-xs font-bold text-brand-navy">
-                Link Padrão da Sala Virtual (Google Meet / Zoom)
+                Link do Grupo / Contato de WhatsApp dos Mentorados
               </Label>
               <Input
-                placeholder="https://meet.google.com/..."
-                value={productForm.meeting_link}
-                onChange={(e) => setProductForm({ ...productForm, meeting_link: e.target.value })}
-                className="mt-1.5 rounded-xl border-brand-border bg-white text-xs"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-bold text-brand-navy">
-                WhatsApp de Suporte aos Mentorados
-              </Label>
-              <Input
-                placeholder="Ex: 84999999999"
-                value={productForm.whatsapp_support}
+                placeholder="https://chat.whatsapp.com/..."
+                value={productForm.contact_whatsapp}
                 onChange={(e) =>
-                  setProductForm({ ...productForm, whatsapp_support: e.target.value })
+                  setProductForm({ ...productForm, contact_whatsapp: e.target.value })
                 }
                 className="mt-1.5 rounded-xl border-brand-border bg-white text-xs"
               />
@@ -406,14 +390,16 @@ export default function AdminMentorship() {
               </div>
             ) : (
               sessions.map((s) => {
-                const dateStr = new Date(s.scheduled_at).toLocaleString('pt-BR', {
-                  weekday: 'short',
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })
+                const dateStr = s.date
+                  ? new Date(s.date).toLocaleString('pt-BR', {
+                      weekday: 'short',
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : 'Data não informada'
                 return (
                   <div
                     key={s.id}
@@ -421,7 +407,7 @@ export default function AdminMentorship() {
                   >
                     <div className="space-y-1.5 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        {s.is_next && (
+                        {s.status === 'proximo' && (
                           <Badge className="bg-brand-orange text-white text-[10px] font-extrabold">
                             Próximo em Destaque
                           </Badge>
@@ -429,31 +415,37 @@ export default function AdminMentorship() {
                         <Badge
                           variant="outline"
                           className={
-                            s.status === 'completed'
+                            s.status === 'realizado'
                               ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                              : 'border-blue-200 bg-blue-50 text-blue-700'
+                              : s.status === 'cancelado'
+                                ? 'border-red-200 bg-red-50 text-red-700'
+                                : 'border-blue-200 bg-blue-50 text-blue-700'
                           }
                         >
-                          {s.status === 'completed' ? 'Concluído' : 'Agendado'}
+                          {s.status === 'realizado'
+                            ? 'Realizado'
+                            : s.status === 'cancelado'
+                              ? 'Cancelado'
+                              : 'Próximo'}
                         </Badge>
                         <span className="text-xs font-bold text-brand-muted">{s.cohort_name}</span>
                       </div>
 
                       <h3 className="font-extrabold text-brand-navy text-base">{s.title}</h3>
-                      {s.description && (
-                        <p className="text-xs text-brand-muted line-clamp-2">{s.description}</p>
+                      {s.summary && (
+                        <p className="text-xs text-brand-muted line-clamp-2">{s.summary}</p>
                       )}
 
                       <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-brand-muted">
                         <span className="flex items-center gap-1 font-semibold text-brand-navy">
                           <Clock className="h-3.5 w-3.5 text-brand-orange" /> {dateStr}
                         </span>
-                        {s.recording_url && (
+                        {s.video_url && (
                           <span className="flex items-center gap-1 text-emerald-700 font-bold">
                             <Video className="h-3.5 w-3.5" /> Gravação disponível
                           </span>
                         )}
-                        {s.application_material_url && (
+                        {s.material_url && (
                           <span className="flex items-center gap-1 text-purple-700 font-bold">
                             <Download className="h-3.5 w-3.5" /> Material de aplicação
                           </span>
@@ -517,8 +509,8 @@ export default function AdminMentorship() {
                 <Label className="text-xs font-bold text-brand-navy">Data e Horário</Label>
                 <Input
                   type="datetime-local"
-                  value={sessionForm.scheduled_at}
-                  onChange={(e) => setSessionForm({ ...sessionForm, scheduled_at: e.target.value })}
+                  value={sessionForm.date}
+                  onChange={(e) => setSessionForm({ ...sessionForm, date: e.target.value })}
                   className="mt-1.5 rounded-xl border-brand-border"
                   required
                 />
@@ -533,43 +525,31 @@ export default function AdminMentorship() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-bold text-brand-navy">Status</Label>
-                <select
-                  value={sessionForm.status}
-                  onChange={(e) =>
-                    setSessionForm({
-                      ...sessionForm,
-                      status: e.target.value as MentorshipSessionRecord['status'],
-                    })
-                  }
-                  className="mt-1.5 h-10 w-full rounded-xl border border-brand-border bg-white px-3 text-xs"
-                >
-                  <option value="scheduled">Agendado</option>
-                  <option value="completed">Concluído</option>
-                </select>
-              </div>
-              <div className="flex items-center pt-6">
-                <label className="flex items-center gap-2 text-xs font-bold text-brand-navy cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={sessionForm.is_next}
-                    onChange={(e) => setSessionForm({ ...sessionForm, is_next: e.target.checked })}
-                    className="h-4 w-4 rounded text-brand-orange"
-                  />
-                  Destacar como Próximo Encontro
-                </label>
-              </div>
+            <div>
+              <Label className="text-xs font-bold text-brand-navy">Status do Encontro</Label>
+              <select
+                value={sessionForm.status}
+                onChange={(e) =>
+                  setSessionForm({
+                    ...sessionForm,
+                    status: e.target.value as MentorshipSessionRecord['status'],
+                  })
+                }
+                className="mt-1.5 h-10 w-full rounded-xl border border-brand-border bg-white px-3 text-xs"
+              >
+                <option value="proximo">Próximo (Em destaque)</option>
+                <option value="realizado">Realizado (Gravação e Material liberados)</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-brand-navy">Descrição dos Tópicos</Label>
+              <Label className="text-xs font-bold text-brand-navy">Resumo dos Tópicos</Label>
               <Textarea
                 rows={2}
                 placeholder="Ex: Validação do script de prospecção, precificação e diagnóstico ao vivo."
-                value={sessionForm.description}
-                onChange={(e) => setSessionForm({ ...sessionForm, description: e.target.value })}
+                value={sessionForm.summary}
+                onChange={(e) => setSessionForm({ ...sessionForm, summary: e.target.value })}
                 className="mt-1.5 rounded-xl border-brand-border text-xs"
               />
             </div>
@@ -580,8 +560,10 @@ export default function AdminMentorship() {
               </Label>
               <Input
                 placeholder="https://meet.google.com/..."
-                value={sessionForm.meeting_url}
-                onChange={(e) => setSessionForm({ ...sessionForm, meeting_url: e.target.value })}
+                value={sessionForm.live_meeting_url}
+                onChange={(e) =>
+                  setSessionForm({ ...sessionForm, live_meeting_url: e.target.value })
+                }
                 className="mt-1.5 rounded-xl border-brand-border text-xs"
               />
             </div>
@@ -593,14 +575,12 @@ export default function AdminMentorship() {
               <div className="space-y-3">
                 <div>
                   <Label className="text-xs font-semibold text-brand-muted">
-                    Link da Gravação (YouTube não listado ou Vimeo)
+                    Link da Gravação (YouTube ou Vimeo)
                   </Label>
                   <Input
                     placeholder="https://www.youtube.com/watch?v=..."
-                    value={sessionForm.recording_url}
-                    onChange={(e) =>
-                      setSessionForm({ ...sessionForm, recording_url: e.target.value })
-                    }
+                    value={sessionForm.video_url}
+                    onChange={(e) => setSessionForm({ ...sessionForm, video_url: e.target.value })}
                     className="mt-1 rounded-xl border-brand-border text-xs"
                   />
                 </div>
@@ -611,11 +591,11 @@ export default function AdminMentorship() {
                     </Label>
                     <Input
                       placeholder="https://drive.google.com/... ou link de download"
-                      value={sessionForm.application_material_url}
+                      value={sessionForm.material_url}
                       onChange={(e) =>
                         setSessionForm({
                           ...sessionForm,
-                          application_material_url: e.target.value,
+                          material_url: e.target.value,
                         })
                       }
                       className="mt-1 rounded-xl border-brand-border text-xs"
@@ -627,11 +607,11 @@ export default function AdminMentorship() {
                     </Label>
                     <Input
                       placeholder="Ex: Planilha de Oferta + PDF de Aplicação"
-                      value={sessionForm.application_material_title}
+                      value={sessionForm.material_title}
                       onChange={(e) =>
                         setSessionForm({
                           ...sessionForm,
-                          application_material_title: e.target.value,
+                          material_title: e.target.value,
                         })
                       }
                       className="mt-1 rounded-xl border-brand-border text-xs"

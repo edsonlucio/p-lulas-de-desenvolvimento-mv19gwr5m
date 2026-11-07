@@ -4,6 +4,7 @@ import type {
   ClubDailyCardRecord,
   ClubMemberRecord,
   ClubMemberStatus,
+  CourseWaitlistRecord,
   UserRecord,
 } from '@/lib/types'
 
@@ -147,8 +148,8 @@ export async function addCourseWaitlist(data: {
   })
 }
 
-export async function listCourseWaitlist() {
-  return pb.collection('course_waitlist').getFullList({
+export async function listCourseWaitlist(): Promise<CourseWaitlistRecord[]> {
+  return pb.collection<CourseWaitlistRecord>('course_waitlist').getFullList({
     expand: 'course,user',
     sort: '-created',
     requestKey: null,

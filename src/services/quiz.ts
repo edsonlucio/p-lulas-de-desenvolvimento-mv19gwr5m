@@ -210,7 +210,7 @@ export async function getCourseCertificateEligibility(
   }
 
   // 2. Progresso das aulas do aluno
-  const progressList = await pb.collection<LessonProgressRecord>('progress').getFullList({
+  const progressList = await pb.collection<LessonProgressRecord>('lesson_progress').getFullList({
     filter: `user='${userId}'`,
   })
   const completedLessonIds = new Set(progressList.filter((p) => p.completed).map((p) => p.lesson))

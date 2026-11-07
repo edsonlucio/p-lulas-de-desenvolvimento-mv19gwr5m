@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T20:09:30.783Z",
+  "generatedAt": "2026-11-07T20:33:49.830Z",
   "collections": [
     {
       "name": "users",
@@ -29,29 +29,21 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "role",
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "student",
-            "admin"
-          ]
+          "selectValues": ["student", "admin"]
         },
         {
           "name": "points",
@@ -106,12 +98,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "vendas",
-            "lideranca",
-            "marketing",
-            "motivacional"
-          ]
+          "selectValues": ["vendas", "lideranca", "marketing", "motivacional"]
         },
         {
           "name": "price",
@@ -136,19 +123,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "kiwify_checkout_url",
@@ -199,19 +181,26 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "apostila",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "quiz_ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -278,10 +267,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "ativo",
-            "inativo"
-          ]
+          "selectValues": ["ativo", "inativo"]
         },
         {
           "name": "transcript",
@@ -294,22 +280,47 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "transcricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ideia_central",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "topico_1",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "topico_2",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "topico_3",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "exercicio",
           "type": "text",
           "required": false,
           "system": false
@@ -351,29 +362,21 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "ativa",
-            "cancelada"
-          ]
+          "selectValues": ["ativa", "cancelada"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -444,19 +447,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -502,42 +500,28 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "pix",
-            "cartao"
-          ]
+          "selectValues": ["pix", "cartao"]
         },
         {
           "name": "status",
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "pending",
-            "paid",
-            "cancelled",
-            "falhou",
-            "expirado"
-          ]
+          "selectValues": ["pending", "paid", "cancelled", "falhou", "expirado"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "paid_at",
@@ -632,19 +616,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -681,10 +660,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "arquivo",
-            "link"
-          ]
+          "selectValues": ["arquivo", "link"]
         },
         {
           "name": "arquivo",
@@ -715,29 +691,21 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "ativo",
-            "inativo"
-          ]
+          "selectValues": ["ativo", "inativo"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -794,19 +762,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -844,10 +807,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "ativo",
-            "inativo"
-          ]
+          "selectValues": ["ativo", "inativo"]
         },
         {
           "name": "notes",
@@ -860,19 +820,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -939,30 +894,21 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "rascunho",
-            "agendado",
-            "enviado"
-          ]
+          "selectValues": ["rascunho", "agendado", "enviado"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -1011,19 +957,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -1078,19 +1019,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -1121,11 +1057,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "primeira_aula",
-            "dedicado_7",
-            "maratonista_30"
-          ]
+          "selectValues": ["primeira_aula", "dedicado_7", "maratonista_30"]
         },
         {
           "name": "title",
@@ -1144,24 +1076,17 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": [
-        "CREATE UNIQUE INDEX idx_rewards_user_code ON rewards (user, code)"
-      ]
+      "indexes": ["CREATE UNIQUE INDEX idx_rewards_user_code ON rewards (user, code)"]
     },
     {
       "name": "webhook_settings",
@@ -1197,24 +1122,17 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": [
-        "CREATE UNIQUE INDEX idx_webhook_settings_name ON webhook_settings (name)"
-      ]
+      "indexes": ["CREATE UNIQUE INDEX idx_webhook_settings_name ON webhook_settings (name)"]
     },
     {
       "name": "webhook_logs",
@@ -1274,19 +1192,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -1336,11 +1249,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "pending",
-            "approved",
-            "rejected"
-          ]
+          "selectValues": ["pending", "approved", "rejected"]
         },
         {
           "name": "moderation_notes",
@@ -1371,19 +1280,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -1429,11 +1333,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "pending",
-            "approved",
-            "rejected"
-          ]
+          "selectValues": ["pending", "approved", "rejected"]
         },
         {
           "name": "moderation_notes",
@@ -1452,19 +1352,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -1515,24 +1410,170 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
         "CREATE INDEX idx_tutor_queries_created ON tutor_queries (created DESC)",
         "CREATE INDEX idx_tutor_queries_user ON tutor_queries (user)"
+      ]
+    },
+    {
+      "name": "quiz_questions",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\"",
+        "view": "@request.auth.id != \"\"",
+        "create": "@request.auth.id != \"\" && @request.auth.role = \"admin\"",
+        "update": "@request.auth.id != \"\" && @request.auth.role = \"admin\"",
+        "delete": "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "module",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "modules"
+        },
+        {
+          "name": "pergunta",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "alternativa_a",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "alternativa_b",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "alternativa_c",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "alternativa_d",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "correta",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["a", "b", "c", "d"]
+        },
+        {
+          "name": "position",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_quiz_questions_module ON quiz_questions (module)",
+        "CREATE UNIQUE INDEX idx_quiz_questions_module_pos ON quiz_questions (module, position)"
+      ]
+    },
+    {
+      "name": "quiz_attempts",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)",
+        "view": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)",
+        "create": "@request.auth.id != \"\" && @request.auth.id = @request.body.user && @request.auth.role != \"x\"",
+        "update": "@request.auth.id != \"\" && @request.auth.role = \"admin\"",
+        "delete": "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "module",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "modules"
+        },
+        {
+          "name": "course",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "courses"
+        },
+        {
+          "name": "respostas",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "acertos",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_quiz_attempts_user ON quiz_attempts (user)",
+        "CREATE UNIQUE INDEX idx_quiz_attempts_user_module ON quiz_attempts (user, module)"
       ]
     }
   ]

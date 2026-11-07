@@ -112,9 +112,35 @@ export interface LessonProgressRecord extends RecordModel {
 
 export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'falhou' | 'expirado'
 
+export interface ComboRecord extends RecordModel {
+  title: string
+  slug: string
+  description?: string
+  courses: string[]
+  price: number
+  original_price?: number
+  active: boolean
+  thumbnail?: string
+  expand?: {
+    courses?: CourseRecord[]
+  }
+}
+
+export interface EmailLogRecord extends RecordModel {
+  recipient: string
+  subject: string
+  content?: string
+  status: string
+  order_id?: string
+  error?: string
+}
+
 export interface OrderRecord extends RecordModel {
   user: string
-  course: string
+  course?: string
+  combo?: string
+  customer_name?: string
+  customer_email?: string
   amount: number
   method: 'pix' | 'cartao'
   status: OrderStatus
@@ -123,6 +149,11 @@ export interface OrderRecord extends RecordModel {
   expired_at?: string
   kiwify_order_id?: string
   kiwify_order_ref?: string
+  expand?: {
+    user?: UserRecord
+    course?: CourseRecord
+    combo?: ComboRecord
+  }
 }
 
 export interface WebhookConfig {

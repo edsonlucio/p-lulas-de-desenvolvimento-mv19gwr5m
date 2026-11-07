@@ -75,10 +75,14 @@ import { formatPrice, getCourseBundle, getCourseCounts, listAllCourses } from '@
 import { getModuleWorkbookUrl, updateModuleWorkbook } from '@/services/quiz'
 import { getLessonChunksStats } from '@/services/searchChunks'
 import { AdminModuleQuizModal } from '@/components/admin/AdminModuleQuizModal'
+import { AdminCombosSection } from '@/components/admin/AdminCombosSection'
+import type { ComboRecord } from '@/lib/types'
+import { listAllCombos } from '@/services/combos'
 
 export default function AdminCourses() {
   const { toast } = useToast()
   const [courses, setCourses] = useState<CourseRecord[]>([])
+  const [combos, setCombos] = useState<ComboRecord[]>([])
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([])
   const [counts, setCounts] = useState(
     new Map<string, { modules: number; lessons: number; duration: number }>(),
@@ -137,12 +141,14 @@ export default function AdminCourses() {
   const [editingLesson, setEditingLesson] = useState<LessonRecord | null>(null)
 
   async function load() {
-    const [records, enrollmentList] = await Promise.all([
+    const [records, enrollmentList, comboList] = await Promise.all([
       listAllCourses(),
       pb.collection<EnrollmentRecord>('enrollments').getFullList({ filter: 'situacao = "ativa"' }),
+      listAllCombos().catch(() => []),
     ])
     setCourses(records)
     setEnrollments(enrollmentList)
+    setCombos(comboList)
     setCounts(await getCourseCounts(records.map((record) => record.id)))
     try {
       const stats = await getLessonChunksStats()
@@ -723,6 +729,9 @@ export default function AdminCourses() {
             </div>
           )}
         </div>
+
+        {/* Gestão de Combos (3 em 1) */}
+        <AdminCombosSection combos={combos} courses={courses} onRefresh={load} />
 
         {/* Indicador Geral: Busca por Significado (Etapa 5) */}
         {searchStats && (

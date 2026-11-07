@@ -55,6 +55,14 @@ export default function App() {
               }
             />
             <Route
+              path="checkout"
+              element={
+                <RouteGuard>
+                  <Checkout />
+                </RouteGuard>
+              }
+            />
+            <Route
               path="pedido/:id"
               element={
                 <RouteGuard>

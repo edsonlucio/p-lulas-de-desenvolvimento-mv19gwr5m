@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T22:13:04.883Z",
+  "generatedAt": "2026-11-07T22:41:08.828Z",
   "collections": [
     {
       "name": "users",
@@ -485,7 +485,7 @@
         {
           "name": "course",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "courses"
         },
@@ -550,6 +550,25 @@
         {
           "name": "kiwify_order_ref",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "combo",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "combos"
+        },
+        {
+          "name": "customer_name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "customer_email",
+          "type": "email",
           "required": false,
           "system": false
         }
@@ -1580,6 +1599,150 @@
       "indexes": [
         "CREATE INDEX idx_quiz_attempts_user ON quiz_attempts (user)",
         "CREATE UNIQUE INDEX idx_quiz_attempts_user_module ON quiz_attempts (user, module)"
+      ]
+    },
+    {
+      "name": "combos",
+      "type": "base",
+      "apiRules": {
+        "list": "active = true || @request.auth.role = \"admin\"",
+        "view": "active = true || @request.auth.role = \"admin\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "courses",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "courses"
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "original_price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "thumbnail",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_combos_slug ON combos (slug)"]
+    },
+    {
+      "name": "email_logs",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = \"admin\"",
+        "view": "@request.auth.role = \"admin\"",
+        "create": null,
+        "update": null,
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "recipient",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "subject",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "order_id",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "error",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_email_logs_recipient ON email_logs (recipient)",
+        "CREATE INDEX idx_email_logs_created ON email_logs (created DESC)"
       ]
     }
   ]

@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, BookOpen, SearchX, SlidersHorizontal, Sparkles } from 'lucide-react'
+import {
+  ArrowRight,
+  BookOpen,
+  Check,
+  Layers,
+  Package,
+  SearchX,
+  SlidersHorizontal,
+  Sparkles,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -13,7 +22,8 @@ import {
 import { CourseCover } from '@/components/CourseCover'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingScreen } from '@/components/LoadingScreen'
-import type { CourseCategory, CourseRecord } from '@/lib/types'
+import type { ComboRecord, CourseCategory, CourseRecord } from '@/lib/types'
+import { listActiveCombos } from '@/services/combos'
 import { formatPrice, getCourseCounts, listPublishedCourses } from '@/services/courses'
 
 const filters: Array<{ label: string; value: 'todos' | CourseCategory }> = [
@@ -26,6 +36,7 @@ const filters: Array<{ label: string; value: 'todos' | CourseCategory }> = [
 
 export default function Catalog() {
   const [courses, setCourses] = useState<CourseRecord[]>([])
+  const [combos, setCombos] = useState<ComboRecord[]>([])
   const [counts, setCounts] = useState(
     new Map<string, { modules: number; lessons: number; duration: number }>(),
   )
@@ -34,9 +45,10 @@ export default function Catalog() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    listPublishedCourses()
-      .then(async (records) => {
+    Promise.all([listPublishedCourses(), listActiveCombos().catch(() => [])])
+      .then(async ([records, activeCombos]) => {
         setCourses(records)
+        setCombos(activeCombos)
         setCounts(await getCourseCounts(records.map((item) => item.id)))
       })
       .finally(() => setLoading(false))
@@ -93,6 +105,107 @@ export default function Catalog() {
               </SelectContent>
             </Select>
           </div>
+          {/* Seção de Combos em Destaque */}
+          {!loading && combos.length > 0 && (
+            <div className="mb-14 mt-4">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <span className="eyebrow">
+                    <Package className="h-4 w-4" /> Economia inteligente
+                  </span>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-brand-navy sm:text-3xl">
+                    Combos Especiais (3 em 1)
+                  </h2>
+                  <p className="mt-1 text-sm text-brand-muted">
+                    Garanta 3 cursos completos de uma vez com desconto exclusivo e liberação
+                    imediata.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {combos.map((combo) => {
+                  const comboCourses = combo.expand?.courses || []
+                  const sumOriginal =
+                    combo.original_price || comboCourses.reduce((acc, c) => acc + (c.price || 0), 0)
+                  const discount = sumOriginal > combo.price ? sumOriginal - combo.price : 0
+
+                  return (
+                    <article
+                      key={combo.id}
+                      className="interactive-card relative flex flex-col justify-between overflow-hidden border-2 border-brand-orange/30 bg-gradient-to-b from-white to-orange-50/20 shadow-md"
+                    >
+                      <div className="absolute right-4 top-4 rounded-full bg-brand-orange px-3 py-1 text-xs font-black uppercase tracking-wider text-white shadow-sm">
+                        Combo 3 em 1
+                      </div>
+
+                      <div className="p-6">
+                        <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-brand-orange">
+                          <Layers className="h-4 w-4" />
+                          Formação Completa
+                        </div>
+                        <h3 className="mt-3 text-xl font-black text-brand-navy">{combo.title}</h3>
+                        <p className="mt-2 text-sm leading-6 text-brand-muted">
+                          {combo.description ||
+                            'Leve 3 cursos essenciais reunidos em uma única inscrição com acesso ilimitado.'}
+                        </p>
+
+                        <div className="mt-5 rounded-xl border border-brand-orange/20 bg-white/80 p-4">
+                          <p className="text-xs font-bold uppercase tracking-wider text-brand-navy">
+                            Os 3 cursos inclusos:
+                          </p>
+                          <ul className="mt-2.5 space-y-2">
+                            {comboCourses.map((c) => (
+                              <li
+                                key={c.id}
+                                className="flex items-start gap-2 text-xs font-medium text-brand-navy"
+                              >
+                                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                                <span className="line-clamp-1">{c.title}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-brand-border/60 bg-white/60 p-6">
+                        <div className="mb-4">
+                          {sumOriginal > combo.price && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-brand-muted line-through">
+                                De {formatPrice(sumOriginal)}
+                              </span>
+                              {discount > 0 && (
+                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">
+                                  Economize {formatPrice(discount)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <div className="mt-1 flex items-baseline gap-1">
+                            <span className="text-xs font-bold text-brand-navy">Por apenas</span>
+                            <strong className="text-3xl font-black text-brand-orange">
+                              {formatPrice(combo.price)}
+                            </strong>
+                          </div>
+                        </div>
+
+                        <Button
+                          asChild
+                          className="pill-button w-full h-11 bg-brand-orange text-sm font-extrabold text-white shadow hover:bg-brand-orange-dark"
+                        >
+                          <Link to={`/checkout?combo=${combo.id}`}>
+                            Quero o combo <ArrowRight className="ml-1.5 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <LoadingScreen label="Abrindo a vitrine…" />
           ) : visible.length ? (

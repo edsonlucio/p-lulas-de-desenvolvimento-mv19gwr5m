@@ -34,16 +34,19 @@ import {
 import { CourseCover } from '@/components/CourseCover'
 import { LoadingScreen } from '@/components/LoadingScreen'
 import { useAuth } from '@/contexts/AuthContext'
-import type { CourseBundle, LessonRecord } from '@/lib/types'
+import type { ComboRecord, CourseBundle, LessonRecord } from '@/lib/types'
+import { findCombosForCourse } from '@/services/combos'
 import { getYoutubeEmbed } from '@/lib/youtube'
 import { formatDuration, formatPrice, getCourseBundle } from '@/services/courses'
 import { findEnrollment } from '@/services/student'
+import { Package } from 'lucide-react'
 
 export default function CourseDetail() {
   const { slug = '' } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [bundle, setBundle] = useState<CourseBundle | null>(null)
+  const [relatedCombos, setRelatedCombos] = useState<ComboRecord[]>([])
   const [enrolled, setEnrolled] = useState(false)
   const [preview, setPreview] = useState<LessonRecord | null>(null)
   const [loading, setLoading] = useState(true)
@@ -53,6 +56,12 @@ export default function CourseDetail() {
       .then(async (data) => {
         setBundle(data)
         if (user) setEnrolled(Boolean(await findEnrollment(user.id, data.course.id)))
+        try {
+          const combos = await findCombosForCourse(data.course.id)
+          setRelatedCombos(combos)
+        } catch {
+          /* ignore */
+        }
       })
       .finally(() => setLoading(false))
   }, [slug, user])
@@ -213,6 +222,64 @@ export default function CourseDetail() {
                 <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-brand-muted">
                   {course.description}
                 </p>
+              </div>
+            )}
+
+            {/* Selo / Bloco: Este curso faz parte de um combo */}
+            {relatedCombos.length > 0 && (
+              <div className="mt-10 rounded-2xl border-2 border-brand-orange/40 bg-gradient-to-r from-orange-50/80 via-white to-amber-50/40 p-5 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3.5">
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-orange text-white shadow-sm">
+                      <Package className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-brand-orange/15 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-brand-orange">
+                          Oportunidade 3 em 1
+                        </span>
+                        <span className="text-xs text-brand-muted">Economia garantida</span>
+                      </div>
+                      <h3 className="mt-1 text-base font-extrabold text-brand-navy sm:text-lg">
+                        Este curso faz parte do combo{' '}
+                        <span className="text-brand-orange">{relatedCombos[0].title}</span>
+                      </h3>
+                      <p className="mt-1 text-xs text-brand-muted">
+                        Leve este e mais 2 cursos completos juntos pagando muito menos do que
+                        comprando avulso.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 flex-col items-start gap-2 border-t border-brand-border/60 pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+                    <div>
+                      <span className="block text-[11px] font-bold text-brand-muted">
+                        Preço do Combo (3 cursos):
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <strong className="text-2xl font-black text-brand-orange">
+                          {formatPrice(relatedCombos[0].price)}
+                        </strong>
+                        {relatedCombos[0].original_price &&
+                          relatedCombos[0].original_price > relatedCombos[0].price && (
+                            <span className="text-xs text-brand-muted line-through">
+                              {formatPrice(relatedCombos[0].original_price)}
+                            </span>
+                          )}
+                      </div>
+                    </div>
+
+                    <Button
+                      asChild
+                      size="sm"
+                      className="pill-button bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold shadow-sm"
+                    >
+                      <Link to={`/checkout?combo=${relatedCombos[0].id}`}>
+                        Quero o Combo <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -436,6 +503,34 @@ export default function CourseDetail() {
                   {enrolled ? 'Continuar assistindo' : 'Quero este curso'}{' '}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
+                {/* Destaque do Combo na Sidebar */}
+                {relatedCombos.length > 0 && (
+                  <div className="mt-5 rounded-xl border border-brand-orange/30 bg-orange-50/50 p-3.5">
+                    <div className="flex items-center gap-1.5 text-xs font-black uppercase text-brand-orange">
+                      <Layers className="h-3.5 w-3.5" /> Também no Combo
+                    </div>
+                    <p className="mt-1 text-xs text-brand-navy font-bold line-clamp-1">
+                      {relatedCombos[0].title}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs text-brand-muted">3 cursos por:</span>
+                      <strong className="text-sm font-black text-brand-orange">
+                        {formatPrice(relatedCombos[0].price)}
+                      </strong>
+                    </div>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="pill-button mt-2.5 w-full border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white text-xs font-bold"
+                    >
+                      <Link to={`/checkout?combo=${relatedCombos[0].id}`}>
+                        Quero o Combo 3 em 1
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+
                 <div className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-brand-muted">
                   <ShieldCheck className="h-4 w-4 text-emerald-600" />
                   Garantia e acesso imediato

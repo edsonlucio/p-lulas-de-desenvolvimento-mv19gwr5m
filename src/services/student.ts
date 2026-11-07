@@ -69,24 +69,32 @@ export async function listPoints(userId: string) {
 
 export async function createPendingOrder(
   userId: string,
-  courseId: string,
+  courseId: string | undefined,
   amount: number,
   method: 'pix' | 'cartao',
-  extra?: { kiwify_order_id?: string; kiwify_order_ref?: string },
+  extra?: {
+    kiwify_order_id?: string
+    kiwify_order_ref?: string
+    combo?: string
+    customer_name?: string
+    customer_email?: string
+  },
 ) {
-  return pb.collection<OrderRecord>('orders').create({
+  const payload: Record<string, unknown> = {
     user: userId,
-    course: courseId,
     amount,
     method,
     status: 'pending',
     ...extra,
-  })
+  }
+  if (courseId) payload.course = courseId
+
+  return pb.collection<OrderRecord>('orders').create(payload)
 }
 
 export async function getOrderById(orderId: string) {
   return pb.collection<OrderRecord>('orders').getOne(orderId, {
-    expand: 'user,course',
+    expand: 'user,course,combo,combo.courses',
   })
 }
 
@@ -94,13 +102,17 @@ export async function confirmOrder(orderId: string) {
   return pb.send<OrderRecord>(`/backend/v1/checkout/confirm/${orderId}`, { method: 'POST' })
 }
 
-export async function findLatestPendingOrder(userId: string, courseId: string) {
+export async function findLatestPendingOrder(userId: string, courseId?: string, comboId?: string) {
   try {
-    return await pb
-      .collection<OrderRecord>('orders')
-      .getFirstListItem(`user = "${userId}" && course = "${courseId}" && status = "pending"`, {
-        sort: '-created',
-      })
+    const filterParts = [`user = "${userId}"`, 'status = "pending"']
+    if (comboId) {
+      filterParts.push(`combo = "${comboId}"`)
+    } else if (courseId) {
+      filterParts.push(`course = "${courseId}"`)
+    }
+    return await pb.collection<OrderRecord>('orders').getFirstListItem(filterParts.join(' && '), {
+      sort: '-created',
+    })
   } catch {
     return null
   }

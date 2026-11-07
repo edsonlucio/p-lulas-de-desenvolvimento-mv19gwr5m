@@ -28,6 +28,8 @@ export interface ModuleRecord extends RecordModel {
   course: string
   title: string
   position: number
+  apostila?: string
+  quiz_ativo?: boolean
 }
 
 export interface LessonRecord extends RecordModel {
@@ -41,6 +43,33 @@ export interface LessonRecord extends RecordModel {
   situacao: 'ativo' | 'inativo'
   transcript?: string
   transcricao?: string
+  ideia_central?: string
+  topico_1?: string
+  topico_2?: string
+  topico_3?: string
+  exercicio?: string
+}
+
+export type QuizAlternativeKey = 'a' | 'b' | 'c' | 'd'
+
+export interface QuizQuestionRecord extends RecordModel {
+  module: string
+  pergunta: string
+  alternativa_a: string
+  alternativa_b: string
+  alternativa_c: string
+  alternativa_d: string
+  correta: QuizAlternativeKey
+  position: number
+}
+
+export interface QuizAttemptRecord extends RecordModel {
+  user: string
+  module: string
+  course: string
+  respostas: Record<string, QuizAlternativeKey> | null
+  acertos: number
+  total: number
 }
 
 export interface SearchChunkRecord extends RecordModel {

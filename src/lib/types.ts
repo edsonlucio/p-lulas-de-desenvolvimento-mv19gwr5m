@@ -61,6 +61,7 @@ export interface QuizQuestionRecord extends RecordModel {
   alternativa_d: string
   correta: QuizAlternativeKey
   position: number
+  feedback?: string
 }
 
 export interface QuizAttemptRecord extends RecordModel {

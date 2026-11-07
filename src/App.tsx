@@ -24,6 +24,7 @@ import AdminModeration from '@/pages/admin/AdminModeration'
 import AdminOrders from '@/pages/admin/AdminOrders'
 import AdminStudents from '@/pages/admin/AdminStudents'
 import CoursePlayer from '@/pages/student/CoursePlayer'
+import CourseCertificate from '@/pages/student/CourseCertificate'
 import StudentDashboard from '@/pages/student/Dashboard'
 import Profile from '@/pages/student/Profile'
 import SearchLessons from '@/pages/student/SearchLessons'
@@ -83,6 +84,14 @@ export default function App() {
                 element={
                   <RouteGuard>
                     <CoursePlayer />
+                  </RouteGuard>
+                }
+              />
+              <Route
+                path="curso/:slug/certificado"
+                element={
+                  <RouteGuard>
+                    <CourseCertificate />
                   </RouteGuard>
                 }
               />

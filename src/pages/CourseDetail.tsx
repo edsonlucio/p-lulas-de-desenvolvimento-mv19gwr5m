@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowRight,
+  Award,
   BookOpen,
   CheckCircle2,
   ChevronRight,
@@ -225,12 +226,24 @@ export default function CourseDetail() {
                   <h2 className="section-title mt-2">Módulos e Aulas</h2>
                   <p className="body-muted mt-1 max-w-2xl">
                     O 1º módulo está aberto para demonstração. Os demais módulos são liberados após
-                    a confirmação da compra.
+                    a confirmação da compra. Ao final de cada módulo há avaliação prática com
+                    feedback imediato e emissão de certificado oficial com média ≥ 70%.
                   </p>
                 </div>
-                <div className="text-xs font-semibold text-brand-muted">
-                  {modules.length} {modules.length === 1 ? 'módulo' : 'módulos'} · {lessonCount}{' '}
-                  {lessonCount === 1 ? 'aula' : 'aulas'}
+                <div className="flex flex-col items-end gap-1">
+                  <div className="text-xs font-semibold text-brand-muted">
+                    {modules.length} {modules.length === 1 ? 'módulo' : 'módulos'} · {lessonCount}{' '}
+                    {lessonCount === 1 ? 'aula' : 'aulas'}
+                  </div>
+                  {enrolled && (
+                    <Link
+                      to={`/app/curso/${course.slug}/certificado`}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange hover:underline"
+                    >
+                      <Award className="h-3.5 w-3.5" />
+                      Ver Certificado
+                    </Link>
+                  )}
                 </div>
               </div>
 

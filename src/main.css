@@ -212,6 +212,33 @@
   animation: capsuleRise 0.28s ease-out both;
 }
 
+/* Regras de impressão para exportação de Certificado em PDF */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  body {
+    background: #0b132b !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-certificate-only {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

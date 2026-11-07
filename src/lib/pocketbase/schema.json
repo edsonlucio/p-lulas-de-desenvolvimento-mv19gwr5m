@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T21:19:02.755Z",
+  "generatedAt": "2026-11-07T22:13:04.883Z",
   "collections": [
     {
       "name": "users",
@@ -1499,6 +1499,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "feedback",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1513,7 +1519,7 @@
         "list": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)",
         "view": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)",
         "create": "@request.auth.id != \"\" && @request.auth.id = @request.body.user && @request.auth.role != \"x\"",
-        "update": "@request.auth.id != \"\" && @request.auth.role = \"admin\"",
+        "update": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || user = @request.auth.id)",
         "delete": "@request.auth.id != \"\" && @request.auth.role = \"admin\""
       },
       "fields": [

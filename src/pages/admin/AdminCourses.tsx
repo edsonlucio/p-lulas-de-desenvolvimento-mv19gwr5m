@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle,
+  Award,
   BookOpen,
   CheckCircle2,
   ChevronDown,
@@ -73,6 +74,7 @@ import {
 import { formatPrice, getCourseBundle, getCourseCounts, listAllCourses } from '@/services/courses'
 import { getModuleWorkbookUrl, updateModuleWorkbook } from '@/services/quiz'
 import { getLessonChunksStats } from '@/services/searchChunks'
+import { AdminModuleQuizModal } from '@/components/admin/AdminModuleQuizModal'
 
 export default function AdminCourses() {
   const { toast } = useToast()
@@ -124,6 +126,10 @@ export default function AdminCourses() {
   const [workbookSaving, setWorkbookSaving] = useState(false)
   const [workbookUrl, setWorkbookUrl] = useState<string>('')
   const [loadingWorkbookUrl, setLoadingWorkbookUrl] = useState(false)
+
+  // Avaliação do Módulo (Quiz 5 a 8 perguntas com feedback)
+  const [quizModalOpen, setQuizModalOpen] = useState(false)
+  const [targetModuleForQuiz, setTargetModuleForQuiz] = useState<ModuleRecord | null>(null)
 
   // Edição / Criação de Aula
   const [lessonModalOpen, setLessonModalOpen] = useState(false)
@@ -907,6 +913,24 @@ export default function AdminCourses() {
                           <BookOpen className="mr-1.5 h-3.5 w-3.5" />
                           {mod.apostila ? 'Apostila PDF (anexada)' : 'Anexar Apostila PDF'}
                         </Button>
+                        {/* Avaliação do Módulo (5 a 8 perguntas) */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setTargetModuleForQuiz(mod)
+                            setQuizModalOpen(true)
+                          }}
+                          className={`h-8 rounded-full px-2.5 text-xs font-bold ${
+                            mod.quiz_ativo
+                              ? 'border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100'
+                              : 'border-dashed border-sky-400/60 text-sky-700 hover:bg-sky-50'
+                          }`}
+                          title="Cadastrar ou editar avaliação de 5 a 8 perguntas com feedback para este módulo"
+                        >
+                          <Award className="mr-1.5 h-3.5 w-3.5" />
+                          {mod.quiz_ativo ? 'Avaliação (ativa)' : 'Cadastrar Avaliação'}
+                        </Button>
                         {/* Renomear Módulo */}
                         <Button
                           size="sm"
@@ -1295,6 +1319,14 @@ export default function AdminCourses() {
             }}
           />
         )}
+
+        {/* Modal de Avaliação do Módulo (5 a 8 perguntas) */}
+        <AdminModuleQuizModal
+          open={quizModalOpen}
+          onOpenChange={setQuizModalOpen}
+          module={targetModuleForQuiz}
+          onSaved={() => void refreshStructure()}
+        />
       </div>
     </div>
   )

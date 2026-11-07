@@ -49,6 +49,7 @@ import { getCourseBundle } from '@/services/courses'
 import { getMaterialFileUrl, getMaterialKind, listMaterialsByLesson } from '@/services/materials'
 import { getModuleWorkbookUrl } from '@/services/quiz'
 import { findEnrollment, listProgress, saveLessonPosition } from '@/services/student'
+import { ModuleQuizSection } from '@/components/student/ModuleQuizSection'
 
 interface ModuleLessonsListProps {
   module: ModuleRecord & { lessons: LessonRecord[] }
@@ -940,6 +941,32 @@ export default function CoursePlayer() {
                   </div>
                 </div>
               )}
+
+              {/* Avaliação do Módulo ao final das aulas */}
+              {currentModule && user && (
+                <div id="avaliacao-modulo" className="mt-10">
+                  <ModuleQuizSection
+                    module={currentModule}
+                    courseId={bundle.course.id}
+                    courseSlug={bundle.course.slug}
+                    userId={user.id}
+                    completedLessonIds={
+                      new Set(progress.filter((p) => p.completed).map((p) => p.lesson))
+                    }
+                    isLastModule={currentModuleIndex === bundle.modules.length - 1}
+                    onGoToCertificate={() => {
+                      navigate(`/app/curso/${bundle.course.slug}/certificado`)
+                    }}
+                    onGoToNextModule={() => {
+                      const nextMod = bundle.modules[currentModuleIndex + 1]
+                      if (nextMod && nextMod.lessons[0]) {
+                        selectLesson(nextMod.lessons[0])
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </main>
@@ -958,9 +985,22 @@ export default function CoursePlayer() {
                   onSelect={selectLesson}
                 />
 
-                {/* Botão de download da apostila do módulo na lateral */}
-                {hasWorkbook && (
-                  <div className="mt-4 pt-3 border-t border-white/10">
+                {/* Ações do Módulo na Lateral: Apostila e Atalho da Avaliação */}
+                <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const el = document.getElementById('avaliacao-modulo')
+                      if (el) el.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                    className="w-full rounded-xl border-sky-500/40 bg-sky-500/10 text-xs font-bold text-sky-300 hover:bg-sky-500/20 hover:text-white"
+                  >
+                    <Award className="mr-1.5 h-3.5 w-3.5 text-sky-400" />
+                    Avaliação do Módulo
+                  </Button>
+
+                  {hasWorkbook && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -980,8 +1020,8 @@ export default function CoursePlayer() {
                         </>
                       )}
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
 

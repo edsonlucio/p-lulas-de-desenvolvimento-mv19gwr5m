@@ -241,6 +241,23 @@ export default function StudentDashboard() {
                               style={{ width: `${percent}%` }}
                             />
                           </div>
+
+                          <div className="mt-4 pt-3 border-t border-brand-subtle flex items-center justify-between text-xs">
+                            <span className="text-brand-muted">
+                              {percent === 100 ? 'Curso concluído' : 'Em andamento'}
+                            </span>
+                            <span
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                window.location.href = `/app/curso/${bundle.course.slug}/certificado`
+                              }}
+                              className="font-bold text-brand-orange hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <Award className="h-3.5 w-3.5" />
+                              Ver Certificado
+                            </span>
+                          </div>
                         </div>
                       </Link>
                     )

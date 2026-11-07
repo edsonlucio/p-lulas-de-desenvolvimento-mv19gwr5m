@@ -47,7 +47,8 @@ export default function App() {
             <Route path="clube" element={<Clube />} />
             <Route path="entrar" element={<Login />} />
             <Route path="cadastro" element={<Register />} />
-            <Route path="esqueci-senha" element={<PasswordRecovery />} />
+            <Route path="recuperar-senha" element={<PasswordRecovery />} />
+            <Route path="esqueci-senha" element={<Navigate to="/recuperar-senha" replace />} />
             <Route path="redefinir-senha" element={<ResetPassword />} />
             <Route path="verificar-email" element={<VerifyEmail />} />
             <Route path="confirmar-troca-email" element={<ConfirmEmailChange />} />

@@ -118,7 +118,7 @@ export default function Login() {
                     Senha
                   </label>
                   <Link
-                    to="/esqueci-senha"
+                    to="/recuperar-senha"
                     className="mb-2 text-xs font-bold text-brand-orange hover:underline"
                   >
                     Esqueci minha senha

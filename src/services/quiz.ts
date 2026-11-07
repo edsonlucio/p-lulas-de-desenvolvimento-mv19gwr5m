@@ -156,9 +156,9 @@ export async function updateModuleWorkbook(
 export function lessonHasContent(lesson: LessonRecord): boolean {
   return Boolean(
     lesson.ideia_central?.trim() ||
-      lesson.topico_1?.trim() ||
-      lesson.topico_2?.trim() ||
-      lesson.topico_3?.trim() ||
-      lesson.exercicio?.trim(),
+    lesson.topico_1?.trim() ||
+    lesson.topico_2?.trim() ||
+    lesson.topico_3?.trim() ||
+    lesson.exercicio?.trim(),
   )
 }

@@ -36,8 +36,8 @@ import { cn } from '@/lib/utils'
 const publicLinks = [
   { label: 'Início', href: '/' },
   { label: 'Cursos', href: '/cursos' },
-  { label: 'Clube das Pílulas', href: '/#clube' },
-  { label: 'Contato', href: '/#contato' },
+  { label: 'Mentorias', href: '/#mentorias' },
+  { label: 'Clube', href: '/#clube' },
 ]
 const studentLinks = [
   { label: 'Meus cursos', href: '/app' },
@@ -260,19 +260,20 @@ export default function Layout() {
           <div className="flex items-center justify-between">
             <BrandLogo />
             <button
-              className="grid h-10 w-10 place-items-center rounded-full bg-white"
+              className="grid h-11 w-11 place-items-center rounded-full bg-white shadow-sm"
               onClick={() => setMobileOpen(false)}
               aria-label="Fechar menu"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6 text-brand-navy" />
             </button>
           </div>
-          <nav className="mt-14 flex flex-col gap-2">
+          <nav className="mt-10 flex flex-col gap-2">
             {links.map((item, index) => (
               <Link
                 key={item.label}
                 to={item.href}
-                className="animate-capsule-rise rounded-2xl px-4 py-4 text-xl font-extrabold text-brand-navy hover:bg-white"
+                onClick={() => setMobileOpen(false)}
+                className="animate-capsule-rise rounded-2xl px-4 py-4 text-xl font-extrabold text-brand-navy transition-colors hover:bg-white active:bg-white"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
                 {item.label}
@@ -282,14 +283,22 @@ export default function Layout() {
           <div className="mt-auto space-y-3">
             {!user ? (
               <>
-                <Button asChild variant="outline" className="w-full rounded-full">
-                  <Link to="/entrar">Entrar</Link>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-12 w-full rounded-full text-base font-bold"
+                >
+                  <Link to="/entrar" onClick={() => setMobileOpen(false)}>
+                    Entrar
+                  </Link>
                 </Button>
                 <Button
                   asChild
-                  className="w-full rounded-full bg-brand-orange hover:bg-brand-orange-dark"
+                  className="h-12 w-full rounded-full bg-brand-orange text-base font-extrabold text-white shadow-md hover:bg-brand-orange-dark"
                 >
-                  <Link to="/cadastro">Criar conta</Link>
+                  <Link to="/cadastro" onClick={() => setMobileOpen(false)}>
+                    Criar conta
+                  </Link>
                 </Button>
               </>
             ) : (
@@ -378,16 +387,16 @@ export default function Layout() {
                   <Instagram className="h-4 w-4" />
                 </a>
                 <a
-                  href="https://www.youtube.com/@prof_edsonlucio"
+                  href="https://www.youtube.com/@pilulasdedesenvolvimento"
                   target="_blank"
-                  rel="noreferrer"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/10 hover:bg-brand-orange"
-                  aria-label="YouTube Professor Edson Lúcio"
+                  rel="noopener noreferrer"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-white/10 hover:bg-brand-orange transition-colors"
+                  aria-label="YouTube Pílulas de Desenvolvimento"
                 >
                   <Youtube className="h-4 w-4" />
                 </a>
               </div>
-              <div className="mt-4 space-y-1 text-xs leading-5 text-white/55">
+              <div className="mt-4 space-y-1.5 text-xs leading-5 text-white/55">
                 <a
                   href="https://www.instagram.com/pilulasdedesenvolvimento"
                   target="_blank"
@@ -405,6 +414,15 @@ export default function Layout() {
                 >
                   <Instagram className="h-3.5 w-3.5 shrink-0 opacity-70" />
                   <span>@edsonlucio</span>
+                </a>
+                <a
+                  href="https://www.youtube.com/@pilulasdedesenvolvimento"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 hover:text-white transition-colors"
+                >
+                  <Youtube className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                  <span>@pilulasdedesenvolvimento</span>
                 </a>
               </div>
             </div>

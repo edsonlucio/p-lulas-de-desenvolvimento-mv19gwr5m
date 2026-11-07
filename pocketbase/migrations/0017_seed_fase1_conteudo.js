@@ -9,13 +9,7 @@ migrate(
     const course = app.findRecordsByFilter('courses', 'slug = "marketing-digital"', '', 1)[0]
     if (!course) return
 
-    const modules = app.findRecordsByFilter(
-      'modules',
-      `course = "${course.id}"`,
-      'position',
-      -1,
-      0,
-    )
+    const modules = app.findRecordsByFilter('modules', `course = "${course.id}"`, 'position', -1, 0)
     const moduleByTitle = {}
     for (const mod of modules) moduleByTitle[mod.getString('title')] = mod
 
@@ -67,8 +61,7 @@ migrate(
           'Escolha 1 tema e planeje 3 formatos: um Reels curto, um vídeo longo de YouTube e um carrossel — cada um com sua chamada para ação.',
       },
       'Anúncios: primeiros passos no tráfego pago': {
-        ideia_central:
-          'Tráfego pago amplifica uma mensagem; ele não corrige uma oferta confusa.',
+        ideia_central: 'Tráfego pago amplifica uma mensagem; ele não corrige uma oferta confusa.',
         topico_1: 'Comece com 3 definições: objetivo, audiência e ação mensurável.',
         topico_2: 'Teste criativos com orçamento pequeno e pare quando o dado falar.',
         topico_3: 'Campanha boa nasce de oferta validada no orgânico.',
@@ -234,13 +227,7 @@ migrate(
     // Campos de aula preenchidos permanecem (são conteúdo, não estrutura).
     const course = app.findRecordsByFilter('courses', 'slug = "marketing-digital"', '', 1)[0]
     if (!course) return
-    const modules = app.findRecordsByFilter(
-      'modules',
-      `course = "${course.id}"`,
-      'position',
-      -1,
-      0,
-    )
+    const modules = app.findRecordsByFilter('modules', `course = "${course.id}"`, 'position', -1, 0)
     for (const mod of modules) {
       const questions = app.findRecordsByFilter('quiz_questions', `module = "${mod.id}"`, '', -1, 0)
       for (const question of questions) app.delete(question)

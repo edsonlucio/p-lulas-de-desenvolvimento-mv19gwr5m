@@ -80,6 +80,45 @@ export default function Index() {
 
   const featured = courses.find((course) => course.slug === 'marketing-digital') ?? courses[0]
 
+  const fallbackCards: CourseRecord[] = [
+    {
+      id: 'mock-vendas',
+      title: 'Vendas de Alto Impacto',
+      slug: 'vendas-alto-impacto',
+      subtitle: 'Técnicas práticas de negociação e fechamento para bater metas com consistência.',
+      description:
+        'Aprenda o passo a passo para conduzir conversas de vendas, contornar objeções e acelerar seu fechamento diário.',
+      category: 'vendas',
+      price: 197,
+      published: true,
+      thumbnail: '',
+      kiwify_checkout_url: '',
+      created: '2026-10-15 10:00:00.000Z',
+      updated: '2026-10-15 10:00:00.000Z',
+      collectionId: '',
+      collectionName: 'courses',
+    },
+    {
+      id: 'mock-lideranca',
+      title: 'Liderança e Cultura de Ação',
+      slug: 'lideranca-cultura-acao',
+      subtitle: 'Como liderar equipes engajadas, alinhar rotinas e gerar resultados com respeito.',
+      description:
+        'Lidere com clareza, presença e direção. Forme líderes autônomos que transformam metas em realizações.',
+      category: 'lideranca',
+      price: 247,
+      published: true,
+      thumbnail: '',
+      kiwify_checkout_url: '',
+      created: '2026-10-16 10:00:00.000Z',
+      updated: '2026-10-16 10:00:00.000Z',
+      collectionId: '',
+      collectionName: 'courses',
+    },
+  ]
+
+  const displayCourses = [...courses, ...fallbackCards].slice(0, 3)
+
   return (
     <div className="route-page -mt-[76px]">
       <section className="grid-pattern relative min-h-screen overflow-hidden bg-brand-navy pt-[76px] text-white">
@@ -102,17 +141,17 @@ export default function Index() {
               <Button
                 asChild
                 size="lg"
-                className="pill-button h-13 bg-brand-orange px-7 text-white hover:bg-brand-orange-dark"
+                className="pill-button h-12 sm:h-14 bg-brand-orange px-8 text-base font-extrabold text-white shadow-lg shadow-brand-orange/20 hover:bg-brand-orange-dark"
               >
-                <a href="#catalogo">
-                  Conhecer cursos <ArrowRight className="ml-2 h-4 w-4" />
+                <a href="#cursos">
+                  Ver cursos <ArrowRight className="ml-2 h-4 w-4" />
                 </a>
               </Button>
               <Button
                 asChild
                 size="lg"
                 variant="outline"
-                className="pill-button h-13 border-white/25 bg-white/5 px-7 text-white hover:bg-white/12 hover:text-white"
+                className="pill-button h-12 sm:h-14 border-white/25 bg-white/5 px-8 text-base font-semibold text-white hover:bg-white/12 hover:text-white"
               >
                 <a
                   href="https://www.instagram.com/pilulasdedesenvolvimento"
@@ -457,14 +496,17 @@ export default function Index() {
         </section>
       )}
 
-      <section id="catalogo" className="section-space">
+      <section id="cursos" className="section-space">
         <div className="container-site">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <span className="eyebrow">
-                <BriefcaseBusiness className="h-4 w-4" /> Sua próxima habilidade
+                <BriefcaseBusiness className="h-4 w-4" /> Cursos Práticos
               </span>
-              <h2 className="section-title mt-3">Cursos para colocar em prática.</h2>
+              <h2 className="section-title mt-3">Cursos</h2>
+              <p className="body-muted mt-2 max-w-xl">
+                Aulas diretas ao ponto para aplicar no mesmo dia na sua rotina profissional.
+              </p>
             </div>
             <Link
               to="/cursos"
@@ -473,42 +515,109 @@ export default function Index() {
               Ver todos os cursos <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-10 flex snap-x gap-5 overflow-x-auto pb-5">
-            {courses.slice(0, 3).map((course) => {
-              const meta = counts.get(course.id)
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {displayCourses.map((course) => {
+              const isFallback = course.id.startsWith('mock-')
+              const courseUrl = isFallback ? `/cursos` : `/cursos/${course.slug}`
               return (
-                <Link
+                <article
                   key={course.id}
-                  to={`/cursos/${course.slug}`}
-                  className="interactive-card group min-w-[88%] snap-start overflow-hidden sm:min-w-[360px] lg:min-w-0 lg:flex-1"
+                  className="interactive-card flex flex-col justify-between overflow-hidden rounded-3xl bg-white p-0 shadow-card"
                 >
                   <div className="overflow-hidden">
                     <CourseCover
                       course={course}
-                      className="aspect-video transition-transform duration-500 group-hover:scale-[1.03]"
+                      className="aspect-video w-full transition-transform duration-500 hover:scale-[1.03]"
                     />
                   </div>
-                  <div className="p-6">
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-brand-orange">
-                      {course.category}
-                    </p>
-                    <h3 className="mt-2 text-xl font-extrabold text-brand-navy">{course.title}</h3>
-                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-brand-muted">
-                      {course.subtitle}
-                    </p>
-                    <div className="mt-5 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-brand-muted">
-                        {meta?.modules ?? 0} módulos · {meta?.lessons ?? 0} aulas ·{' '}
-                        {formatDuration(meta?.duration ?? 0)}
-                      </span>
-                      <strong className="text-lg text-brand-navy">
+                  <div className="flex flex-1 flex-col justify-between p-6 sm:p-7">
+                    <div>
+                      <p className="text-xs font-extrabold uppercase tracking-wider text-brand-orange">
+                        {course.category}
+                      </p>
+                      <h3 className="mt-2 text-xl font-extrabold text-brand-navy">
+                        {course.title}
+                      </h3>
+                      {/* Exatamente uma linha de descrição */}
+                      <p className="mt-2 truncate text-sm leading-6 text-brand-muted">
+                        {course.subtitle}
+                      </p>
+                    </div>
+                    <div className="mt-6 flex items-center justify-between border-t border-brand-border/60 pt-5">
+                      <strong className="text-lg font-extrabold text-brand-navy">
                         {formatPrice(course.price)}
                       </strong>
+                      <Button
+                        asChild
+                        className="pill-button h-11 bg-brand-orange px-6 text-sm font-extrabold text-white shadow-sm hover:bg-brand-orange-dark"
+                      >
+                        <Link to={courseUrl}>
+                          Conhecer <ArrowRight className="ml-1.5 h-4 w-4" />
+                        </Link>
+                      </Button>
                     </div>
                   </div>
-                </Link>
+                </article>
               )
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Casca da seção Mentorias — aguardando módulo futuro */}
+      <section id="mentorias" className="border-y border-brand-border/70 bg-white py-14 sm:py-20">
+        <div className="container-site text-center">
+          <span className="eyebrow mx-auto">
+            <Target className="h-4 w-4 text-brand-orange" /> Direcionamento
+          </span>
+          <h2 className="section-title mt-3">Mentorias</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-brand-muted sm:text-lg">
+            Aqui ficam as mentorias ao vivo com acompanhamento individual e em grupo para acelerar
+            seus resultados.
+          </p>
+          <div className="mt-8 flex justify-center">
+            <Button
+              asChild
+              variant="outline"
+              className="pill-button h-12 border-brand-navy/20 px-7 text-sm font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
+            >
+              <a
+                href="https://www.instagram.com/pilulasdedesenvolvimento"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Instagram className="mr-2 h-4 w-4 text-brand-orange" />
+                Informações de novas turmas via Instagram
+              </a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Seção curta sobre a Pílulas */}
+      <section id="sobre" className="section-space bg-brand-sand">
+        <div className="container-site">
+          <div className="mx-auto max-w-3xl rounded-[32px] border border-brand-border bg-white p-8 shadow-card sm:p-12 text-center sm:text-left">
+            <span className="eyebrow">
+              <Sparkles className="h-4 w-4 text-brand-orange" /> Sobre a Pílulas
+            </span>
+            <h2 className="section-title mt-3">Desenvolvimento que vira movimento.</h2>
+            <p className="body-muted mt-5 text-base sm:text-lg leading-relaxed">
+              Nascida em <strong>Natal/RN</strong>, a <strong>Pílulas de Desenvolvimento</strong>{' '}
+              cria treinamentos práticos de vendas, liderança e gestão para profissionais e empresas
+              que buscam resultados reais, com método claro e aplicação imediata.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t border-brand-border/60 text-sm font-bold text-brand-navy">
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-brand-orange" /> Natal/RN para todo o Brasil
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-brand-orange" /> Vendas, liderança e negócios
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-brand-orange" /> Sem enrolação
+              </span>
+            </div>
           </div>
         </div>
       </section>

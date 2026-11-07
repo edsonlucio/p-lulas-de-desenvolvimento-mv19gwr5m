@@ -49,16 +49,19 @@ import type {
   ClubMemberStatus,
   UserRecord,
 } from '@/lib/types'
+import type { CourseWaitlistRecord } from '@/lib/types'
 import {
   addClubMember,
   createClubDailyCard,
   deleteClubDailyCard,
   listClubDailyCards,
   listClubMembers,
+  listCourseWaitlists,
   listUsersForClub,
   removeClubMember,
   updateClubDailyCard,
   updateClubMember,
+  updateCourseWaitlistStatus,
 } from '@/services/club'
 
 // Datas do ciclo de leitura
@@ -70,6 +73,7 @@ export default function AdminClub() {
   const [members, setMembers] = useState<ClubMemberRecord[]>([])
   const [cards, setCards] = useState<ClubDailyCardRecord[]>([])
   const [allUsers, setAllUsers] = useState<UserRecord[]>([])
+  const [waitlists, setWaitlists] = useState<CourseWaitlistRecord[]>([])
 
   // Modal Card Diário
   const [cardModalOpen, setCardModalOpen] = useState(false)
@@ -94,14 +98,16 @@ export default function AdminClub() {
   // Carregar dados
   const loadData = async () => {
     try {
-      const [membersRes, cardsRes, usersRes] = await Promise.all([
+      const [membersRes, cardsRes, usersRes, waitlistsRes] = await Promise.all([
         listClubMembers(),
         listClubDailyCards(),
         listUsersForClub(),
+        listCourseWaitlists(),
       ])
       setMembers(membersRes)
       setCards(cardsRes)
       setAllUsers(usersRes)
+      setWaitlists(waitlistsRes)
     } catch (err) {
       console.error(err)
       toast({
@@ -726,7 +732,125 @@ export default function AdminClub() {
           )}
         </section>
 
-        {/* 4. GESTÃO DE MEMBROS DO CLUBE */}
+        {/* 4. LISTA DE ESPERA DOS CURSOS PAGOS */}
+        <section className="surface-card p-6 sm:p-8 border-2 border-brand-orange/20">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-orange/10 text-brand-orange">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <h2 className="text-xl font-extrabold text-brand-navy">
+                  Lista de Espera dos Cursos Pagos ({waitlists.length})
+                </h2>
+              </div>
+              <p className="mt-1 text-xs text-brand-muted">
+                Interessados cadastrados pelo formulário exclusivo do Clube das Pílulas.
+              </p>
+            </div>
+          </div>
+
+          {waitlists.length === 0 ? (
+            <div className="my-8 rounded-2xl border border-dashed border-brand-border p-8 text-center">
+              <Sparkles className="mx-auto h-8 w-8 text-brand-muted opacity-40" />
+              <h3 className="mt-2 text-sm font-bold text-brand-navy">
+                Nenhum lead na lista de espera no momento
+              </h3>
+              <p className="text-xs text-brand-muted">
+                Novos cadastros realizados na rota /clube aparecerão aqui em tempo real.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 overflow-hidden rounded-2xl border border-brand-border bg-white">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-brand-border bg-brand-subtle/50 text-brand-muted font-bold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="py-3 px-4">Nome & Contato</th>
+                      <th className="py-3 px-4">Curso Desejado</th>
+                      <th className="py-3 px-4">Data Registro</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Objetivo / Notas</th>
+                      <th className="py-3 px-4 text-right">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-border">
+                    {waitlists.map((w) => {
+                      const courseTitle = w.expand?.course?.title || 'Curso não identificado'
+                      const regDate = w.created
+                        ? new Date(w.created).toLocaleDateString('pt-BR')
+                        : '—'
+                      const cleanPhone = w.whatsapp ? w.whatsapp.replace(/\D/g, '') : ''
+                      return (
+                        <tr key={w.id} className="hover:bg-brand-sand/30 transition">
+                          <td className="py-3 px-4">
+                            <strong className="block font-bold text-brand-navy">{w.name}</strong>
+                            <span className="block text-[11px] text-brand-muted">{w.email}</span>
+                            <span className="block text-[11px] text-emerald-700 font-semibold">
+                              {w.whatsapp}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-bold text-brand-navy">{courseTitle}</td>
+                          <td className="py-3 px-4 text-brand-muted">{regDate}</td>
+                          <td className="py-3 px-4">
+                            <Badge
+                              variant="outline"
+                              className={
+                                w.status === 'matriculado'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                  : w.status === 'contatado'
+                                    ? 'bg-blue-50 text-blue-700 border-blue-300'
+                                    : 'bg-amber-50 text-amber-700 border-amber-300'
+                              }
+                            >
+                              {w.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-brand-muted max-w-xs truncate">
+                            {w.notes || '—'}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {cleanPhone && (
+                                <a
+                                  href={`https://wa.me/55${cleanPhone}?text=Olá%20${encodeURIComponent(w.name)},%20vimos%20seu%20interesse%20no%20curso%20${encodeURIComponent(courseTitle)}%20pelo%20Clube%20das%20Pílulas!`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:underline"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                                </a>
+                              )}
+                              {w.status === 'pendente' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-[10px] text-blue-700"
+                                  onClick={async () => {
+                                    await updateCourseWaitlistStatus(w.id, 'contatado')
+                                    setWaitlists((prev) =>
+                                      prev.map((item) =>
+                                        item.id === w.id ? { ...item, status: 'contatado' } : item,
+                                      ),
+                                    )
+                                  }}
+                                >
+                                  Marcar Contatado
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* 5. GESTÃO DE MEMBROS DO CLUBE */}
         <section className="surface-card p-6 sm:p-8">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>

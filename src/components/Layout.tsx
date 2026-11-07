@@ -36,11 +36,13 @@ import { cn } from '@/lib/utils'
 const publicLinks = [
   { label: 'Início', href: '/' },
   { label: 'Cursos', href: '/cursos' },
-  { label: 'Mentorias', href: '/#mentorias' },
-  { label: 'Clube', href: '/#clube' },
+  { label: 'Mentorias', href: '/mentorias' },
+  { label: 'Clube', href: '/clube' },
 ]
 const studentLinks = [
   { label: 'Meus cursos', href: '/app' },
+  { label: 'Mentorias', href: '/mentorias' },
+  { label: 'Clube', href: '/clube' },
   { label: 'Comunidade', href: '/app/comunidade' },
   { label: 'Buscar', href: '/app/busca' },
   { label: 'Meus pontos', href: '/app/perfil#trilha' },
@@ -52,6 +54,7 @@ const adminLinks = [
   { label: 'Moderação', href: '/admin/comunidade' },
   { label: 'Pedidos', href: '/admin/pedidos' },
   { label: 'Clube das Pílulas', href: '/admin/clube' },
+  { label: 'Mentorias', href: '/admin/mentorias' },
 ]
 
 export default function Layout() {
@@ -352,7 +355,10 @@ export default function Layout() {
                 <Link className="block hover:text-white" to="/cursos/marketing-digital">
                   Marketing Digital
                 </Link>
-                <Link className="block hover:text-white" to="/#clube">
+                <Link className="block hover:text-white" to="/mentorias">
+                  Mentorias
+                </Link>
+                <Link className="block hover:text-white" to="/clube">
                   Clube das Pílulas
                 </Link>
               </div>

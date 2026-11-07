@@ -10,6 +10,7 @@ export interface UserRecord extends RecordModel {
   verified: boolean
   role: UserRole
   points: number
+  whatsapp?: string
 }
 
 export interface CourseRecord extends RecordModel {
@@ -139,8 +140,11 @@ export interface OrderRecord extends RecordModel {
   user: string
   course?: string
   combo?: string
+  mentorship?: string
+  subscription_plan?: string
   customer_name?: string
   customer_email?: string
+  customer_whatsapp?: string
   amount: number
   method: 'pix' | 'cartao'
   status: OrderStatus
@@ -153,6 +157,100 @@ export interface OrderRecord extends RecordModel {
     user?: UserRecord
     course?: CourseRecord
     combo?: ComboRecord
+    mentorship?: MentorshipProgramRecord
+    subscription_plan?: SubscriptionPlanRecord
+  }
+}
+
+export interface MentorshipProgramRecord extends RecordModel {
+  title: string
+  slug: string
+  subtitle?: string
+  description?: string
+  price: number
+  original_price?: number
+  meeting_cadence?: string
+  meeting_schedule?: string
+  active: boolean
+  contact_whatsapp?: string
+  features_list?: string[]
+}
+
+export type MentorshipMeetingStatus = 'proximo' | 'realizado' | 'cancelado'
+
+export interface MentorshipMeetingRecord extends RecordModel {
+  title: string
+  date: string
+  status: MentorshipMeetingStatus
+  summary?: string
+  video_url?: string
+  live_meeting_url?: string
+  material_title?: string
+  material_url?: string
+  material_file?: string
+  cohort_name?: string
+  position?: number
+}
+
+export type MentorshipEnrollmentStatus = 'ativa' | 'expirada' | 'cancelada'
+
+export interface MentorshipEnrollmentRecord extends RecordModel {
+  user: string
+  program?: string
+  order?: string
+  status: MentorshipEnrollmentStatus
+  expires_at?: string
+  notes?: string
+  expand?: {
+    user?: UserRecord
+    program?: MentorshipProgramRecord
+  }
+}
+
+export type CourseWaitlistStatus = 'pendente' | 'contatado' | 'convertido' | 'matriculado'
+export type MentorshipProductRecord = MentorshipProgramRecord
+export type MentorshipSessionRecord = MentorshipMeetingRecord
+
+export interface CourseWaitlistRecord extends RecordModel {
+  name: string
+  email: string
+  whatsapp: string
+  course: string
+  user?: string
+  source?: string
+  notes?: string
+  status: CourseWaitlistStatus
+  expand?: {
+    user?: UserRecord
+    course?: CourseRecord
+  }
+}
+
+export type SubscriptionInterval = 'monthly' | 'yearly'
+export type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'paused'
+
+export interface SubscriptionPlanRecord extends RecordModel {
+  name: string
+  slug: string
+  interval: SubscriptionInterval
+  price: number
+  original_price?: number
+  discount_percentage?: number
+  description?: string
+  active: boolean
+}
+
+export interface SubscriptionRecord extends RecordModel {
+  user: string
+  plan: string
+  status: SubscriptionStatus
+  current_period_start?: string
+  current_period_end?: string
+  cancel_at_period_end?: boolean
+  order_id?: string
+  expand?: {
+    user?: UserRecord
+    plan?: SubscriptionPlanRecord
   }
 }
 
@@ -231,6 +329,9 @@ export interface ClubMemberRecord extends RecordModel {
   joined_at: string
   status: ClubMemberStatus
   notes?: string
+  whatsapp?: string
+  name?: string
+  email?: string
   expand?: {
     user?: UserRecord
   }

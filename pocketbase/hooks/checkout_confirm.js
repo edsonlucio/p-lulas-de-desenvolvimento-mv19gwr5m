@@ -35,6 +35,8 @@ routerAdd(
       const userId = txOrder.getString('user')
       const courseId = txOrder.getString('course')
       const comboId = txOrder.getString('combo')
+      const mentorshipId = txOrder.getString('mentorship')
+      const subPlanId = txOrder.getString('subscription_plan')
 
       // Identificar o aluno
       try {
@@ -44,6 +46,77 @@ routerAdd(
       } catch (_) {
         buyerEmail = txOrder.getString('customer_email')
         buyerName = txOrder.getString('customer_name') || 'Aluno(a)'
+      }
+
+      // 1. Liberação de Mentoria se for pedido de mentoria
+      if (mentorshipId) {
+        try {
+          const mentProg = txApp.findRecordById('mentorship_programs', mentorshipId)
+          purchasedTitle = mentProg.getString('title')
+        } catch (_) {
+          purchasedTitle = 'Mentoria Executiva Pílulas de Desenvolvimento'
+        }
+
+        const existingMentEnroll = txApp.findRecordsByFilter(
+          'mentorship_enrollments',
+          'user = {:user}',
+          'created',
+          1,
+          0,
+          { user: userId },
+        )
+        if (existingMentEnroll.length) {
+          existingMentEnroll[0].set('status', 'ativa')
+          existingMentEnroll[0].set('order', orderId)
+          txApp.save(existingMentEnroll[0])
+        } else {
+          const mColl = txApp.findCollectionByNameOrId('mentorship_enrollments')
+          const mEnroll = new Record(mColl)
+          mEnroll.set('user', userId)
+          mEnroll.set('program', mentorshipId)
+          mEnroll.set('order', orderId)
+          mEnroll.set('status', 'ativa')
+          txApp.save(mEnroll)
+        }
+      }
+
+      // 2. Liberação de Assinatura se for pedido de plano
+      if (subPlanId) {
+        try {
+          const planRec = txApp.findRecordById('subscription_plans', subPlanId)
+          purchasedTitle = planRec.getString('name')
+        } catch (_) {
+          purchasedTitle = 'Assinatura Pílulas Pass'
+        }
+
+        const existingSub = txApp.findRecordsByFilter(
+          'subscriptions',
+          'user = {:user}',
+          'created',
+          1,
+          0,
+          { user: userId },
+        )
+        const nowIso = new Date().toISOString()
+        const oneYearLater = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+        if (existingSub.length) {
+          existingSub[0].set('status', 'active')
+          existingSub[0].set('plan', subPlanId)
+          existingSub[0].set('order_id', orderId)
+          existingSub[0].set('current_period_start', nowIso)
+          existingSub[0].set('current_period_end', oneYearLater)
+          txApp.save(existingSub[0])
+        } else {
+          const subColl = txApp.findCollectionByNameOrId('subscriptions')
+          const sub = new Record(subColl)
+          sub.set('user', userId)
+          sub.set('plan', subPlanId)
+          sub.set('status', 'active')
+          sub.set('order_id', orderId)
+          sub.set('current_period_start', nowIso)
+          sub.set('current_period_end', oneYearLater)
+          txApp.save(sub)
+        }
       }
 
       // Determinar quais cursos devem ser liberados
@@ -137,7 +210,9 @@ routerAdd(
       const appUrl = 'https://pilulas-de-desenvolvimento-0d150.shrd01.internal.goskip.dev'
 
       let coursesListHtml = ''
-      if (enrolledCourses.length > 0) {
+      if (mentorshipId) {
+        coursesListHtml = `<li><strong>Mentoria Executiva</strong> — <a href="${appUrl}/mentorias" style="color: #FF5A1F; font-weight: bold;">Acessar Encontros e Materiais de Mentoria</a></li>`
+      } else if (enrolledCourses.length > 0) {
         coursesListHtml = enrolledCourses
           .map(
             (c) =>

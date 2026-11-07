@@ -346,22 +346,26 @@ export default function Index() {
                 </div>
               </div>
 
-              {/* CTA direto para o WhatsApp */}
+              {/* CTA direto para a área do Clube */}
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button
                   asChild
                   size="lg"
                   className="pill-button h-13 bg-brand-orange px-8 text-base text-white hover:bg-brand-orange-dark shadow-[0_8px_24px_rgba(255,107,44,.4)]"
                 >
-                  <a
-                    href="https://chat.whatsapp.com/GDwgDsxlgc56o0qOBM6r7o"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <MessageCircle className="mr-2 h-5 w-5" /> Entrar no grupo do WhatsApp
-                  </a>
+                  <Link to="/clube">
+                    <Sparkles className="mr-2 h-5 w-5" /> Acessar área gratuita do Clube
+                  </Link>
                 </Button>
-                <span className="text-xs text-white/55">Grupo oficial e 100% gratuito</span>
+                <a
+                  href="https://chat.whatsapp.com/GDwgDsxlgc56o0qOBM6r7o"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center text-xs text-white/70 underline underline-offset-4 hover:text-white"
+                >
+                  <MessageCircle className="mr-1.5 h-4 w-4 text-emerald-400" /> Ou entre direto no
+                  WhatsApp
+                </a>
               </div>
             </article>
 
@@ -564,30 +568,34 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Casca da seção Mentorias — aguardando módulo futuro */}
+      {/* Seção Mentorias direcionando para a nova página dedicada */}
       <section id="mentorias" className="border-y border-brand-border/70 bg-white py-14 sm:py-20">
         <div className="container-site text-center">
           <span className="eyebrow mx-auto">
-            <Target className="h-4 w-4 text-brand-orange" /> Direcionamento
+            <Target className="h-4 w-4 text-brand-orange" /> Direcionamento ao vivo
           </span>
-          <h2 className="section-title mt-3">Mentorias</h2>
+          <h2 className="section-title mt-3">Mentorias em Grupo</h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-brand-muted sm:text-lg">
-            Aqui ficam as mentorias ao vivo com acompanhamento individual e em grupo para acelerar
-            seus resultados.
+            Uma turma por semana com Edson Lúcio. Encontros ao vivo, gravações na íntegra, materiais
+            de aplicação imediata e acompanhamento direto.
           </p>
-          <div className="mt-8 flex justify-center">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Button
+              asChild
+              className="pill-button h-12 bg-brand-orange px-8 text-sm font-extrabold text-white hover:bg-brand-orange-dark shadow-sm"
+            >
+              <Link to="/mentorias">
+                Conhecer a Mentoria Semanal <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
             <Button
               asChild
               variant="outline"
               className="pill-button h-12 border-brand-navy/20 px-7 text-sm font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
             >
-              <a
-                href="https://www.instagram.com/pilulasdedesenvolvimento"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href="https://www.instagram.com/edsonlucio" target="_blank" rel="noreferrer">
                 <Instagram className="mr-2 h-4 w-4 text-brand-orange" />
-                Informações de novas turmas via Instagram
+                Falar com Edson Lúcio
               </a>
             </Button>
           </div>

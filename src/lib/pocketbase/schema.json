@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T22:41:08.828Z",
+  "generatedAt": "2026-11-07T22:56:00.414Z",
   "collections": [
     {
       "name": "users",
@@ -48,6 +48,12 @@
         {
           "name": "points",
           "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "whatsapp",
+          "type": "text",
           "required": false,
           "system": false
         }
@@ -571,6 +577,26 @@
           "type": "email",
           "required": false,
           "system": false
+        },
+        {
+          "name": "mentorship",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "mentorship_programs"
+        },
+        {
+          "name": "subscription_plan",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "subscription_plans"
+        },
+        {
+          "name": "customer_whatsapp",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -801,9 +827,9 @@
       "name": "club_members",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = \"admin\"",
-        "view": "@request.auth.role = \"admin\"",
-        "create": "@request.auth.role = \"admin\"",
+        "list": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")",
+        "view": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")",
+        "create": "@request.auth.id != \"\" && user = @request.auth.id",
         "update": "@request.auth.role = \"admin\"",
         "delete": "@request.auth.role = \"admin\""
       },
@@ -847,6 +873,24 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "whatsapp",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -859,8 +903,8 @@
       "name": "club_daily_cards",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = \"admin\"",
-        "view": "@request.auth.role = \"admin\"",
+        "list": "",
+        "view": "",
         "create": "@request.auth.role = \"admin\"",
         "update": "@request.auth.role = \"admin\"",
         "delete": "@request.auth.role = \"admin\""
@@ -1743,6 +1787,504 @@
       "indexes": [
         "CREATE INDEX idx_email_logs_recipient ON email_logs (recipient)",
         "CREATE INDEX idx_email_logs_created ON email_logs (created DESC)"
+      ]
+    },
+    {
+      "name": "mentorship_programs",
+      "type": "base",
+      "apiRules": {
+        "list": "active = true || @request.auth.role = \"admin\"",
+        "view": "active = true || @request.auth.role = \"admin\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "subtitle",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "original_price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "meeting_cadence",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "meeting_schedule",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "contact_whatsapp",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "features_list",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_mentorship_slug ON mentorship_programs (slug)"]
+    },
+    {
+      "name": "mentorship_meetings",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["proximo", "realizado", "cancelado"]
+        },
+        {
+          "name": "summary",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "video_url",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "live_meeting_url",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "material_title",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "material_url",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "material_file",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cohort_name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "position",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_mentorship_meetings_date ON mentorship_meetings (date DESC)",
+        "CREATE INDEX idx_mentorship_meetings_status ON mentorship_meetings (status)"
+      ]
+    },
+    {
+      "name": "mentorship_enrollments",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")",
+        "view": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "program",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "mentorship_programs"
+        },
+        {
+          "name": "order",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["ativa", "expirada", "cancelada"]
+        },
+        {
+          "name": "expires_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_mentorship_enroll_user ON mentorship_enrollments (user)",
+        "CREATE INDEX idx_mentorship_enroll_status ON mentorship_enrollments (status)"
+      ]
+    },
+    {
+      "name": "course_waitlist",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = \"admin\"",
+        "view": "@request.auth.role = \"admin\"",
+        "create": "",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "whatsapp",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "course",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "courses"
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["pendente", "contatado", "convertido"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_waitlist_course ON course_waitlist (course)",
+        "CREATE INDEX idx_waitlist_email ON course_waitlist (email)",
+        "CREATE INDEX idx_waitlist_created ON course_waitlist (created DESC)"
+      ]
+    },
+    {
+      "name": "subscription_plans",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = \"admin\"",
+        "view": "@request.auth.role = \"admin\"",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "interval",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["monthly", "yearly"]
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "original_price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "discount_percentage",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_sub_plan_slug ON subscription_plans (slug)"]
+    },
+    {
+      "name": "subscriptions",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")",
+        "view": "@request.auth.id != \"\" && (user = @request.auth.id || @request.auth.role = \"admin\")",
+        "create": "@request.auth.role = \"admin\"",
+        "update": "@request.auth.role = \"admin\"",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "plan",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "subscription_plans"
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["active", "past_due", "canceled", "paused"]
+        },
+        {
+          "name": "current_period_start",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "current_period_end",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cancel_at_period_end",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "order_id",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_sub_user ON subscriptions (user)",
+        "CREATE INDEX idx_sub_status ON subscriptions (status)"
       ]
     }
   ]

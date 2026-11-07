@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   ArrowRight,
   Check,
   Copy,
   CreditCard,
   ExternalLink,
+  Layers,
   LoaderCircle,
   LockKeyhole,
   QrCode,
   ShieldCheck,
   Sparkles,
+  Users,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -21,8 +23,10 @@ import { LoadingScreen } from '@/components/LoadingScreen'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
-import type { CourseRecord, OrderRecord } from '@/lib/types'
+import type { ComboRecord, CourseRecord, MentorshipProductRecord, OrderRecord } from '@/lib/types'
 import { formatPrice, getCourseBySlug } from '@/services/courses'
+import { getComboById, getComboBySlug } from '@/services/combos'
+import { getMentorshipProductById, getPublicMentorshipProduct } from '@/services/mentorship'
 import {
   confirmOrder,
   createPendingOrder,
@@ -32,10 +36,17 @@ import {
 
 export default function Checkout() {
   const { slug = '' } = useParams()
+  const [searchParams] = useSearchParams()
+  const comboParam = searchParams.get('combo')
+  const mentorshipParam = searchParams.get('mentorship')
+
   const { user } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
+
   const [course, setCourse] = useState<CourseRecord | null>(null)
+  const [combo, setCombo] = useState<ComboRecord | null>(null)
+  const [mentorship, setMentorship] = useState<MentorshipProductRecord | null>(null)
   const [order, setOrder] = useState<OrderRecord | null>(null)
   const [method, setMethod] = useState<'pix' | 'cartao'>('pix')
   const [loading, setLoading] = useState(true)
@@ -45,21 +56,53 @@ export default function Checkout() {
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' })
   const [error, setError] = useState('')
 
+  const isMentorshipMode = Boolean(mentorshipParam || slug === 'mentoria')
+  const isComboMode = Boolean(comboParam)
+
   useEffect(() => {
     if (!user) return
-    getCourseBySlug(slug)
-      .then(async (record) => {
-        setCourse(record)
-        const enrolled = await findEnrollment(user.id, record.id)
-        if (enrolled) {
-          navigate(`/app/curso/${record.slug}`, { replace: true })
+
+    async function loadItem() {
+      try {
+        if (isMentorshipMode) {
+          const product = mentorshipParam
+            ? await getMentorshipProductById(mentorshipParam)
+            : await getPublicMentorshipProduct()
+          setMentorship(product)
           return
         }
-        const pending = await findLatestPendingOrder(user.id, record.id)
-        if (pending) setOrder(pending)
-      })
-      .finally(() => setLoading(false))
-  }, [navigate, slug, user])
+
+        if (comboParam) {
+          const comboRecord =
+            (await getComboById(comboParam).catch(() => null)) ||
+            (await getComboBySlug(comboParam).catch(() => null))
+          if (comboRecord) {
+            setCombo(comboRecord)
+            return
+          }
+        }
+
+        if (slug) {
+          const record = await getCourseBySlug(slug)
+          setCourse(record)
+          const enrolled = await findEnrollment(user.id, record.id)
+          if (enrolled) {
+            navigate(`/app/curso/${record.slug}`, { replace: true })
+            return
+          }
+          const pending = await findLatestPendingOrder(user.id, record.id)
+          if (pending) setOrder(pending)
+        }
+      } catch (err) {
+        console.error('Erro ao carregar item para checkout:', err)
+        setError('Não foi possível carregar os detalhes do item selecionado.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadItem()
+  }, [user, slug, comboParam, mentorshipParam, isMentorshipMode, navigate])
 
   // Escuta confirmação em tempo real (via webhook ou simulação)
   useRealtime<OrderRecord>(
@@ -72,36 +115,61 @@ export default function Checkout() {
     Boolean(order),
   )
 
+  const itemTitle = isMentorshipMode
+    ? mentorship?.title || 'Mentoria Pílulas'
+    : combo
+      ? combo.title
+      : course?.title || 'Curso'
+
+  const itemPrice = isMentorshipMode
+    ? mentorship?.price || 497
+    : combo
+      ? combo.price
+      : course?.price || 0
+
   const pixCode = useMemo(() => `PILLULA-${order?.id || 'NOVO-PEDIDO'}`, [order?.id])
 
   async function ensureOrder() {
-    if (!user || !course) throw new Error('Pedido incompleto')
+    if (!user) throw new Error('Usuário não autenticado')
     if (order && order.method === method) return order
-    // Regra de segurança: botão NUNCA cria matrícula — apenas cria pedido pendente!
-    const created = await createPendingOrder(user.id, course.id, course.price, method)
-    setOrder(created)
-    return created
+
+    if (isMentorshipMode && mentorship) {
+      const created = await createPendingOrder(user.id, undefined, mentorship.price, method, {
+        mentorship: mentorship.id,
+      })
+      setOrder(created)
+      return created
+    }
+
+    if (combo) {
+      const created = await createPendingOrder(user.id, undefined, combo.price, method, {
+        combo: combo.id,
+      })
+      setOrder(created)
+      return created
+    }
+
+    if (course) {
+      const created = await createPendingOrder(user.id, course.id, course.price, method)
+      setOrder(created)
+      return created
+    }
+
+    throw new Error('Item para pedido não encontrado')
   }
 
-  // Ação principal do fluxo Kiwify: cria pedido pendente e abre o checkout
+  // Ação principal do fluxo Kiwify (para cursos com link cadastrado)
   async function handleGoToKiwifyCheckout() {
     if (!user || !course || !course.kiwify_checkout_url) return
     setRedirectingKiwify(true)
     setError('')
     try {
-      // 1. Cria o pedido com situação 'pendente' (o botão NUNCA cria matrícula)
       const pendingOrder = await ensureOrder()
-
-      // 2. Monta o link do checkout Kiwify passando o identificador do pedido como src/sck/s1/utm_source
-      // Assim o Kiwify devolve esse id no webhook quando a compra for aprovada
       const baseUrl = course.kiwify_checkout_url.trim()
       const separator = baseUrl.includes('?') ? '&' : '?'
       const kiwifyUrl = `${baseUrl}${separator}src=${encodeURIComponent(pendingOrder.id)}&s1=${encodeURIComponent(pendingOrder.id)}&email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.name || '')}`
 
-      // 3. Abre o checkout do Kiwify em nova aba
       window.open(kiwifyUrl, '_blank', 'noopener,noreferrer')
-
-      // 4. Redireciona a tela local para a página de retorno/espera do pedido pendente
       navigate(`/pedido/${pendingOrder.id}`)
     } catch {
       setError('Não foi possível iniciar o pedido. Tente novamente.')
@@ -109,7 +177,7 @@ export default function Checkout() {
     }
   }
 
-  // Simulação manual de pagamento (fallback para cursos sem Kiwify ou teste de admin)
+  // Simulação manual de pagamento (checkout simulado — decisão do usuário)
   async function paySimulated(event: FormEvent) {
     event.preventDefault()
     setError('')
@@ -144,10 +212,24 @@ export default function Checkout() {
     setTimeout(() => setCopied(false), 1800)
   }
 
-  if (loading || !course) return <LoadingScreen label="Preparando seu checkout…" />
+  if (loading) return <LoadingScreen label="Preparando seu checkout…" />
+
+  if (!course && !combo && !mentorship) {
+    return (
+      <div className="route-page bg-brand-sand py-20 text-center">
+        <h1 className="text-2xl font-bold text-brand-navy">Item não encontrado</h1>
+        <p className="mt-2 text-sm text-brand-muted">
+          O curso, combo ou mentoria solicitado não foi localizado.
+        </p>
+        <Button onClick={() => navigate('/catalogo')} className="mt-6 rounded-full bg-brand-orange">
+          Ir para o Catálogo
+        </Button>
+      </div>
+    )
+  }
 
   const hasKiwify = Boolean(
-    course.kiwify_checkout_url && course.kiwify_checkout_url.trim().length > 0,
+    course?.kiwify_checkout_url && course.kiwify_checkout_url.trim().length > 0,
   )
 
   return (
@@ -161,7 +243,19 @@ export default function Checkout() {
         <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
           <div className="surface-card p-6 sm:p-8">
             <span className="eyebrow">
-              <Sparkles className="h-4 w-4" /> Matrícula
+              {isMentorshipMode ? (
+                <>
+                  <Users className="h-4 w-4 text-brand-orange" /> Mentoria VIP
+                </>
+              ) : combo ? (
+                <>
+                  <Layers className="h-4 w-4 text-brand-orange" /> Combo 3 Cursos
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 text-brand-orange" /> Matrícula
+                </>
+              )}
             </span>
             <h1 className="mt-3 text-3xl font-extrabold tracking-[-.04em] text-brand-navy">
               {hasKiwify ? 'Finalizar matrícula no Kiwify' : 'Como você quer simular o pagamento?'}
@@ -169,11 +263,15 @@ export default function Checkout() {
             <p className="mt-2 text-sm text-brand-muted">
               {hasKiwify
                 ? 'Você será direcionado ao checkout oficial do produto no Kiwify. Assim que o pagamento for aprovado, seu acesso é liberado automaticamente via webhook.'
-                : 'Curso demonstrativo: simule o pagamento para liberar seu acesso imediatamente.'}
+                : isMentorshipMode
+                  ? 'Contratação de mentoria: simulação de pagamento com liberação imediata da sua vaga e encontros.'
+                  : combo
+                    ? 'Combo promocional de 3 cursos: simule o pagamento para liberar os 3 cursos de uma vez.'
+                    : 'Curso demonstrativo: simule o pagamento para liberar seu acesso imediatamente.'}
             </p>
 
             {hasKiwify ? (
-              /* FLUXO KIWIFY INTEGRADO (Regras da Imagem) */
+              /* FLUXO KIWIFY INTEGRADO */
               <div className="mt-8 space-y-6">
                 <div className="rounded-2xl border border-brand-orange/30 bg-brand-orange/5 p-6">
                   <div className="flex items-start gap-4">
@@ -210,8 +308,6 @@ export default function Checkout() {
                   </p>
                 )}
 
-                {/* BOTÃO PRINCIPAL: "Quero me matricular" */}
-                {/* Regra estrita: cria pedido 'pendente' e abre o checkout no Kiwify. NUNCA cria matrícula direto. */}
                 <Button
                   onClick={() => void handleGoToKiwifyCheckout()}
                   disabled={redirectingKiwify}
@@ -235,7 +331,6 @@ export default function Checkout() {
                   Sem pagamento = sem acesso · O webhook valida o token e libera a matrícula
                 </div>
 
-                {/* Opção secundária para teste de admin ou fallback */}
                 <div className="pt-4 border-t border-brand-border/60">
                   <details className="text-xs text-brand-muted">
                     <summary className="cursor-pointer font-semibold text-brand-navy hover:text-brand-orange">
@@ -270,7 +365,7 @@ export default function Checkout() {
                 </div>
               </div>
             ) : (
-              /* FLUXO SIMULADO (quando o curso não tem kiwify_checkout_url configurado) */
+              /* FLUXO SIMULADO (para Mentoria, Combos e Cursos sem Kiwify) */
               <Tabs
                 value={method}
                 onValueChange={(value) => {
@@ -397,6 +492,10 @@ export default function Checkout() {
                         <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
                         Confirmando pagamento…
                       </>
+                    ) : isMentorshipMode ? (
+                      'Confirmar contratação da Mentoria'
+                    ) : combo ? (
+                      'Confirmar compra do Combo (3 Cursos)'
                     ) : (
                       'Quero me matricular'
                     )}
@@ -406,31 +505,82 @@ export default function Checkout() {
             )}
           </div>
 
-          {/* Resumo Lateral do Curso */}
+          {/* Resumo Lateral */}
           <aside>
             <div className="surface-card sticky top-28 overflow-hidden">
-              <CourseCover course={course} className="aspect-video" />
+              {course ? (
+                <CourseCover course={course} className="aspect-video" />
+              ) : combo ? (
+                <div className="relative flex aspect-video flex-col items-center justify-center bg-gradient-to-br from-brand-navy to-brand-navy-light p-6 text-center text-white">
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange text-white shadow-lg">
+                    <Layers className="h-6 w-6" />
+                  </span>
+                  <p className="mt-3 text-xs font-bold uppercase tracking-wider text-brand-orange">
+                    Combo Promocional
+                  </p>
+                  <p className="mt-1 text-sm font-extrabold">3 Cursos em 1</p>
+                </div>
+              ) : (
+                <div className="relative flex aspect-video flex-col items-center justify-center bg-gradient-to-br from-brand-navy via-brand-navy to-brand-navy-light p-6 text-center text-white">
+                  <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-orange text-white shadow-lg">
+                    <Users className="h-7 w-7" />
+                  </span>
+                  <p className="mt-3 text-xs font-bold uppercase tracking-wider text-brand-orange">
+                    Mentoria Exclusiva
+                  </p>
+                  <p className="mt-1 text-sm font-extrabold">Encontros Semanais Ao Vivo</p>
+                </div>
+              )}
+
               <div className="p-6">
                 <p className="text-xs font-extrabold uppercase tracking-wider text-brand-orange">
                   Resumo do pedido
                 </p>
-                <h2 className="mt-2 text-xl font-extrabold text-brand-navy">{course.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-brand-muted">{course.subtitle}</p>
+                <h2 className="mt-2 text-xl font-extrabold text-brand-navy">{itemTitle}</h2>
+                <p className="mt-2 text-sm leading-6 text-brand-muted">
+                  {isMentorshipMode
+                    ? mentorship?.subtitle ||
+                      'Encontros ao vivo semanais com Edson Lúcio, gravações e material de aplicação.'
+                    : combo
+                      ? combo.subtitle || 'Acesso vitalício aos 3 cursos inclusos no combo.'
+                      : course?.subtitle}
+                </p>
+
+                {combo && combo.expand?.courses && combo.expand.courses.length > 0 && (
+                  <div className="mt-4 rounded-xl bg-brand-subtle p-3 text-xs">
+                    <p className="font-bold text-brand-navy mb-1.5">Cursos inclusos:</p>
+                    <ul className="space-y-1 text-brand-muted">
+                      {combo.expand.courses.map((c) => (
+                        <li key={c.id} className="flex items-center gap-1.5">
+                          <Check className="h-3 w-3 text-brand-orange shrink-0" />
+                          <span className="truncate">{c.title}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="my-6 h-px bg-brand-border" />
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-brand-muted">Acesso completo</span>
-                  <span className="font-bold text-brand-navy">{formatPrice(course.price)}</span>
+                  <span className="text-brand-muted">
+                    {isMentorshipMode
+                      ? 'Mentoria completa'
+                      : combo
+                        ? 'Combo de 3 cursos'
+                        : 'Acesso completo'}
+                  </span>
+                  <span className="font-bold text-brand-navy">{formatPrice(itemPrice)}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <strong className="text-brand-navy">Total</strong>
                   <strong className="text-2xl font-extrabold text-brand-orange">
-                    {formatPrice(course.price)}
+                    {formatPrice(itemPrice)}
                   </strong>
                 </div>
 
                 <div className="mt-6 rounded-xl bg-green-50 p-4 text-xs leading-5 text-green-700 border border-green-200">
-                  <strong>Acesso imediato:</strong> após a confirmação do pagamento, sua matrícula é
-                  ativada na hora e o curso é liberado.
+                  <strong>Acesso imediato:</strong> após a confirmação do pagamento, seu acesso à{' '}
+                  {isMentorshipMode ? 'área de mentorias' : 'plataforma'} é liberado na hora.
                 </div>
               </div>
             </div>

@@ -76,8 +76,11 @@ export async function createPendingOrder(
     kiwify_order_id?: string
     kiwify_order_ref?: string
     combo?: string
+    mentorship?: string
+    subscription_plan?: string
     customer_name?: string
     customer_email?: string
+    customer_whatsapp?: string
   },
 ) {
   const payload: Record<string, unknown> = {
@@ -94,7 +97,7 @@ export async function createPendingOrder(
 
 export async function getOrderById(orderId: string) {
   return pb.collection<OrderRecord>('orders').getOne(orderId, {
-    expand: 'user,course,combo,combo.courses',
+    expand: 'user,course,combo,combo.courses,mentorship,subscription_plan',
   })
 }
 
@@ -102,10 +105,17 @@ export async function confirmOrder(orderId: string) {
   return pb.send<OrderRecord>(`/backend/v1/checkout/confirm/${orderId}`, { method: 'POST' })
 }
 
-export async function findLatestPendingOrder(userId: string, courseId?: string, comboId?: string) {
+export async function findLatestPendingOrder(
+  userId: string,
+  courseId?: string,
+  comboId?: string,
+  mentorshipId?: string,
+) {
   try {
     const filterParts = [`user = "${userId}"`, 'status = "pending"']
-    if (comboId) {
+    if (mentorshipId) {
+      filterParts.push(`mentorship = "${mentorshipId}"`)
+    } else if (comboId) {
       filterParts.push(`combo = "${comboId}"`)
     } else if (courseId) {
       filterParts.push(`course = "${courseId}"`)

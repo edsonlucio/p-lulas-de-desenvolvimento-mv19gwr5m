@@ -18,8 +18,11 @@ import Register from '@/pages/Register'
 import ResetPassword from '@/pages/ResetPassword'
 import VerifyEmail from '@/pages/VerifyEmail'
 import AdminClub from '@/pages/admin/AdminClub'
+import Clube from '@/pages/Clube'
+import Mentorias from '@/pages/Mentorias'
 import AdminCourses from '@/pages/admin/AdminCourses'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
+import AdminMentorship from '@/pages/admin/AdminMentorship'
 import AdminModeration from '@/pages/admin/AdminModeration'
 import AdminOrders from '@/pages/admin/AdminOrders'
 import AdminStudents from '@/pages/admin/AdminStudents'
@@ -40,6 +43,8 @@ export default function App() {
             <Route index element={<Index />} />
             <Route path="cursos" element={<Catalog />} />
             <Route path="cursos/:slug" element={<CourseDetail />} />
+            <Route path="mentorias" element={<Mentorias />} />
+            <Route path="clube" element={<Clube />} />
             <Route path="entrar" element={<Login />} />
             <Route path="cadastro" element={<Register />} />
             <Route path="esqueci-senha" element={<PasswordRecovery />} />
@@ -166,6 +171,14 @@ export default function App() {
                 element={
                   <RouteGuard admin>
                     <AdminClub />
+                  </RouteGuard>
+                }
+              />
+              <Route
+                path="mentorias"
+                element={
+                  <RouteGuard admin>
+                    <AdminMentorship />
                   </RouteGuard>
                 }
               />

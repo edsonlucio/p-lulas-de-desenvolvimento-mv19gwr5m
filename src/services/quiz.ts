@@ -148,7 +148,7 @@ export async function getModuleWorkbookUrl(
 
 export async function updateModuleWorkbook(
   moduleId: string,
-  data: FormData | { apostila?: File | null },
+  data: FormData | { apostila?: File | null | '' },
 ): Promise<ModuleRecord> {
   return pb.collection<ModuleRecord>('modules').update(moduleId, data)
 }

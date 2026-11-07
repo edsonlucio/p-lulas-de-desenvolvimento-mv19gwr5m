@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle,
+  BookOpen,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -11,6 +12,7 @@ import {
   Eye,
   FileSpreadsheet,
   FileText,
+  FileUp,
   FolderOpen,
   FolderPlus,
   GraduationCap,
@@ -69,6 +71,7 @@ import {
   updateModule,
 } from '@/services/admin'
 import { formatPrice, getCourseBundle, getCourseCounts, listAllCourses } from '@/services/courses'
+import { getModuleWorkbookUrl, updateModuleWorkbook } from '@/services/quiz'
 import { getLessonChunksStats } from '@/services/searchChunks'
 
 export default function AdminCourses() {
@@ -113,6 +116,14 @@ export default function AdminCourses() {
   const [editingModule, setEditingModule] = useState<ModuleRecord | null>(null)
   const [moduleTitleInput, setModuleTitleInput] = useState('')
   const [savingModule, setSavingModule] = useState(false)
+
+  // Apostila do Módulo (PDF)
+  const [workbookModalOpen, setWorkbookModalOpen] = useState(false)
+  const [targetModuleForWorkbook, setTargetModuleForWorkbook] = useState<ModuleRecord | null>(null)
+  const [workbookFile, setWorkbookFile] = useState<File | null>(null)
+  const [workbookSaving, setWorkbookSaving] = useState(false)
+  const [workbookUrl, setWorkbookUrl] = useState<string>('')
+  const [loadingWorkbookUrl, setLoadingWorkbookUrl] = useState(false)
 
   // Edição / Criação de Aula
   const [lessonModalOpen, setLessonModalOpen] = useState(false)
@@ -238,6 +249,86 @@ export default function AdminCourses() {
     setEditingModule(mod)
     setModuleTitleInput(mod.title)
     setModuleModalOpen(true)
+  }
+
+  async function openWorkbookModal(mod: ModuleRecord) {
+    setTargetModuleForWorkbook(mod)
+    setWorkbookFile(null)
+    setWorkbookUrl('')
+    setWorkbookModalOpen(true)
+    if (mod.apostila) {
+      setLoadingWorkbookUrl(true)
+      try {
+        const url = await getModuleWorkbookUrl(mod, false)
+        setWorkbookUrl(url)
+      } catch {
+        /* ignore */
+      } finally {
+        setLoadingWorkbookUrl(false)
+      }
+    }
+  }
+
+  async function handleSaveWorkbook(e: FormEvent) {
+    e.preventDefault()
+    if (!targetModuleForWorkbook) return
+    if (!workbookFile) {
+      toast({
+        title: 'Selecione um arquivo',
+        description: 'Escolha um arquivo PDF para enviar como apostila.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setWorkbookSaving(true)
+    try {
+      const formData = new FormData()
+      formData.set('apostila', workbookFile)
+      await updateModuleWorkbook(targetModuleForWorkbook.id, formData)
+      toast({
+        title: 'Apostila enviada com sucesso!',
+        description: `O arquivo PDF foi anexado ao módulo "${targetModuleForWorkbook.title}".`,
+      })
+      setWorkbookModalOpen(false)
+      await refreshStructure()
+    } catch {
+      toast({
+        title: 'Erro ao enviar apostila',
+        description: 'Verifique se o arquivo é um PDF de até 20MB e tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setWorkbookSaving(false)
+    }
+  }
+
+  async function handleRemoveWorkbook() {
+    if (!targetModuleForWorkbook) return
+    const ok = window.confirm(
+      `Deseja realmente remover a apostila do módulo "${targetModuleForWorkbook.title}"?`,
+    )
+    if (!ok) return
+
+    setWorkbookSaving(true)
+    try {
+      const formData = new FormData()
+      formData.set('apostila', '')
+      await updateModuleWorkbook(targetModuleForWorkbook.id, formData)
+      toast({
+        title: 'Apostila removida',
+        description: 'O arquivo PDF foi desvinculado do módulo.',
+      })
+      setWorkbookModalOpen(false)
+      await refreshStructure()
+    } catch {
+      toast({
+        title: 'Erro ao remover apostila',
+        variant: 'destructive',
+      })
+    } finally {
+      setWorkbookSaving(false)
+    }
   }
 
   async function handleSaveModule(e: FormEvent) {
@@ -797,6 +888,25 @@ export default function AdminCourses() {
                         >
                           <ChevronDown className="h-4 w-4" />
                         </Button>
+                        {/* Apostila do Módulo (PDF) */}
+                        <Button
+                          size="sm"
+                          variant={mod.apostila ? 'outline' : 'outline'}
+                          onClick={() => void openWorkbookModal(mod)}
+                          className={`h-8 rounded-full px-2.5 text-xs font-bold ${
+                            mod.apostila
+                              ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                              : 'border-dashed border-brand-orange/50 text-brand-orange hover:bg-brand-orange/10'
+                          }`}
+                          title={
+                            mod.apostila
+                              ? 'Apostila em PDF anexada — clique para visualizar ou substituir'
+                              : 'Enviar apostila em PDF para este módulo'
+                          }
+                        >
+                          <BookOpen className="mr-1.5 h-3.5 w-3.5" />
+                          {mod.apostila ? 'Apostila PDF (anexada)' : 'Anexar Apostila PDF'}
+                        </Button>
                         {/* Renomear Módulo */}
                         <Button
                           size="sm"
@@ -947,6 +1057,162 @@ export default function AdminCourses() {
                 ))}
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Apostila do Módulo (PDF) */}
+        <Dialog
+          open={workbookModalOpen}
+          onOpenChange={(isOpen) => {
+            if (!workbookSaving) setWorkbookModalOpen(isOpen)
+          }}
+        >
+          <DialogContent className="max-w-md rounded-3xl">
+            <DialogHeader>
+              <div className="flex items-center gap-2 text-xs font-bold text-brand-orange">
+                <span>{targetModuleForWorkbook?.title}</span>
+                <span>•</span>
+                <span>Apostila em PDF</span>
+              </div>
+              <DialogTitle className="text-xl font-extrabold text-brand-navy">
+                {targetModuleForWorkbook?.apostila
+                  ? 'Substituir apostila do módulo'
+                  : 'Enviar apostila do módulo'}
+              </DialogTitle>
+              <DialogDescription>
+                Envie o arquivo PDF com o conteúdo completo ou exercícios práticos deste módulo. O
+                aluno poderá baixar a apostila na área de estudos.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSaveWorkbook} className="mt-3 space-y-4">
+              {/* Estado atual do arquivo se já existir */}
+              {targetModuleForWorkbook?.apostila && (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <strong className="block text-xs font-bold text-emerald-950 truncate">
+                          Arquivo atual cadastrado
+                        </strong>
+                        <span className="font-mono text-[11px] text-emerald-800 break-all block">
+                          {targetModuleForWorkbook.apostila}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center gap-2 pt-2 border-t border-emerald-200/60">
+                    {loadingWorkbookUrl ? (
+                      <span className="text-xs text-emerald-700 flex items-center">
+                        <LoaderCircle className="h-3 w-3 mr-1 animate-spin" />
+                        Carregando link…
+                      </span>
+                    ) : workbookUrl ? (
+                      <a
+                        href={workbookUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-xs font-bold text-emerald-800 hover:text-emerald-950 underline"
+                      >
+                        <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                        Visualizar PDF atual
+                      </a>
+                    ) : null}
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => void handleRemoveWorkbook()}
+                      disabled={workbookSaving}
+                      className="ml-auto h-7 px-2 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold"
+                    >
+                      <Trash2 className="mr-1 h-3.5 w-3.5" />
+                      Remover apostila
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Seletor de Arquivo PDF */}
+              <div>
+                <Label className="text-xs font-bold text-brand-navy">
+                  {targetModuleForWorkbook?.apostila
+                    ? 'Selecionar novo PDF para substituir (máx 20MB)'
+                    : 'Arquivo da apostila em PDF (máx 20MB)'}
+                </Label>
+                <Label className="mt-1.5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-brand-border bg-brand-surface p-6 text-center transition hover:border-brand-orange hover:bg-white">
+                  <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange/10 text-brand-orange">
+                    <FileUp className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-brand-navy block">
+                      {workbookFile ? workbookFile.name : 'Clique para escolher o arquivo PDF'}
+                    </span>
+                    <span className="text-[11px] text-brand-muted">
+                      {workbookFile
+                        ? `${(workbookFile.size / (1024 * 1024)).toFixed(2)} MB • Clique para trocar`
+                        : 'Formatos aceitos: apenas .pdf'}
+                    </span>
+                  </div>
+                  <input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      if (
+                        file.type !== 'application/pdf' &&
+                        !file.name.toLowerCase().endsWith('.pdf')
+                      ) {
+                        toast({
+                          title: 'Formato inválido',
+                          description: 'Por favor, selecione um arquivo em formato PDF.',
+                          variant: 'destructive',
+                        })
+                        e.target.value = ''
+                        return
+                      }
+                      if (file.size > 20 * 1024 * 1024) {
+                        toast({
+                          title: 'Arquivo muito grande',
+                          description: 'O arquivo PDF deve ter no máximo 20MB.',
+                          variant: 'destructive',
+                        })
+                        e.target.value = ''
+                        return
+                      }
+                      setWorkbookFile(file)
+                    }}
+                  />
+                </Label>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => setWorkbookModalOpen(false)}
+                  disabled={workbookSaving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={workbookSaving || !workbookFile}
+                  className="rounded-full bg-brand-orange hover:bg-brand-orange-dark text-white font-bold"
+                >
+                  {workbookSaving && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                  {targetModuleForWorkbook?.apostila ? 'Substituir apostila' : 'Enviar apostila'}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
 

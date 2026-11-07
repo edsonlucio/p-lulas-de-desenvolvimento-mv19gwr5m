@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Clock3,
   GraduationCap,
+  Layers,
   Lock,
   Play,
   ShieldCheck,

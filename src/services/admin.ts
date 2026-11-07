@@ -82,6 +82,11 @@ export async function createLesson(data: {
   situacao?: 'ativo' | 'inativo'
   transcript?: string
   transcricao?: string
+  ideia_central?: string
+  topico_1?: string
+  topico_2?: string
+  topico_3?: string
+  exercicio?: string
 }) {
   return pb.collection('lessons').create(data)
 }

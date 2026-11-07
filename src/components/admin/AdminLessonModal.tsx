@@ -52,6 +52,11 @@ export function AdminLessonModal({
     is_free: false,
     situacao: 'ativo' as 'ativo' | 'inativo',
     transcript: '',
+    ideia_central: '',
+    topico_1: '',
+    topico_2: '',
+    topico_3: '',
+    exercicio: '',
   })
   const [searchStatus, setSearchStatus] = useState<'nao_preparada' | 'preparada' | 'erro'>(
     'nao_preparada',
@@ -68,6 +73,11 @@ export function AdminLessonModal({
         is_free: !!lesson.is_free,
         situacao: lesson.situacao || 'ativo',
         transcript: trans,
+        ideia_central: lesson.ideia_central || '',
+        topico_1: lesson.topico_1 || '',
+        topico_2: lesson.topico_2 || '',
+        topico_3: lesson.topico_3 || '',
+        exercicio: lesson.exercicio || '',
       })
       void countChunksByLesson(lesson.id).then((count) => {
         setChunkCount(count)
@@ -88,6 +98,11 @@ export function AdminLessonModal({
         is_free: false,
         situacao: 'ativo',
         transcript: '',
+        ideia_central: '',
+        topico_1: '',
+        topico_2: '',
+        topico_3: '',
+        exercicio: '',
       })
       setChunkCount(0)
       setSearchStatus('nao_preparada')
@@ -160,6 +175,11 @@ export function AdminLessonModal({
           situacao: form.situacao,
           transcript: text,
           transcricao: text,
+          ideia_central: form.ideia_central.trim(),
+          topico_1: form.topico_1.trim(),
+          topico_2: form.topico_2.trim(),
+          topico_3: form.topico_3.trim(),
+          exercicio: form.exercicio.trim(),
         })
         currentLessonId = created.id
       }
@@ -212,6 +232,11 @@ export function AdminLessonModal({
         situacao: form.situacao,
         transcript: form.transcript.trim(),
         transcricao: form.transcript.trim(),
+        ideia_central: form.ideia_central.trim(),
+        topico_1: form.topico_1.trim(),
+        topico_2: form.topico_2.trim(),
+        topico_3: form.topico_3.trim(),
+        exercicio: form.exercicio.trim(),
       }
 
       if (lesson) {
@@ -331,13 +356,101 @@ export function AdminLessonModal({
             </div>
 
             <div className="sm:col-span-2">
-              <Label htmlFor="lesson-desc">Descrição / Resumo da aula</Label>
+              <Label htmlFor="lesson-desc">Descrição / Introdução da aula</Label>
               <Textarea
                 id="lesson-desc"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Explique os pontos centrais abordados nesta aula..."
-                className="mt-1.5 min-h-20 rounded-xl"
+                placeholder="Explique o contexto geral abordado nesta aula..."
+                className="mt-1.5 min-h-16 rounded-xl text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Seção Metodologia Pílulas: Ideia Central, Resumo em 3 Tópicos e Exercício Curto */}
+          <div className="rounded-2xl border border-brand-navy/15 bg-brand-surface/70 p-4 sm:p-5 space-y-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-orange text-[11px] font-black text-white">
+                  ★
+                </span>
+                <h3 className="text-sm font-extrabold text-brand-navy">
+                  Estrutura Pedagógica (Ideia Central, 3 Tópicos e Exercício)
+                </h3>
+              </div>
+              <p className="mt-0.5 text-xs text-brand-muted">
+                Esses blocos aparecem destacados logo abaixo do player de vídeo para guiar o
+                aprendizado do aluno.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="lesson-ideia-central" className="text-xs font-bold text-brand-navy">
+                Ideia Central da Aula
+              </Label>
+              <Textarea
+                id="lesson-ideia-central"
+                value={form.ideia_central}
+                onChange={(e) => setForm({ ...form, ideia_central: e.target.value })}
+                placeholder="A mensagem principal em uma única frase marcante (ex: O novo mercado recompensa quem observa, testa e melhora com constância)."
+                className="mt-1.5 min-h-16 rounded-xl text-sm bg-white"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold text-brand-navy">
+                Resumo em até 3 Tópicos Essenciais
+              </Label>
+              <p className="text-[11px] text-brand-muted mb-2">
+                Pontos de fixação rápida para o aluno revisar o conteúdo.
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-orange/15 text-xs font-extrabold text-brand-orange">
+                    1
+                  </span>
+                  <Input
+                    value={form.topico_1}
+                    onChange={(e) => setForm({ ...form, topico_1: e.target.value })}
+                    placeholder="Tópico 1: O comportamento de compra mudou..."
+                    className="rounded-xl text-sm bg-white"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-orange/15 text-xs font-extrabold text-brand-orange">
+                    2
+                  </span>
+                  <Input
+                    value={form.topico_2}
+                    onChange={(e) => setForm({ ...form, topico_2: e.target.value })}
+                    placeholder="Tópico 2: Mentalidade digital é um ciclo contínuo..."
+                    className="rounded-xl text-sm bg-white"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-orange/15 text-xs font-extrabold text-brand-orange">
+                    3
+                  </span>
+                  <Input
+                    value={form.topico_3}
+                    onChange={(e) => setForm({ ...form, topico_3: e.target.value })}
+                    placeholder="Tópico 3: Consistência vale mais que perfeição..."
+                    className="rounded-xl text-sm bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="lesson-exercicio" className="text-xs font-bold text-brand-navy">
+                Exercício Curto de Aplicação
+              </Label>
+              <Textarea
+                id="lesson-exercicio"
+                value={form.exercicio}
+                onChange={(e) => setForm({ ...form, exercicio: e.target.value })}
+                placeholder="Um desafio prático rápido de 5 a 10 minutos para aplicar imediatamente o aprendizado no dia a dia."
+                className="mt-1.5 min-h-20 rounded-xl text-sm bg-white"
               />
             </div>
           </div>

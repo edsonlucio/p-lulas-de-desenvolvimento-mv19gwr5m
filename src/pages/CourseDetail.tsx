@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowRight,
   BookOpen,
-  Check,
+  CheckCircle2,
   ChevronRight,
   Clock3,
   GraduationCap,
@@ -11,6 +11,7 @@ import {
   Play,
   ShieldCheck,
   Sparkles,
+  Unlock,
   UsersRound,
 } from 'lucide-react'
 
@@ -20,6 +21,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -53,6 +55,7 @@ export default function CourseDetail() {
       })
       .finally(() => setLoading(false))
   }, [slug, user])
+
   if (loading) return <LoadingScreen />
   if (!bundle)
     return (
@@ -65,15 +68,66 @@ export default function CourseDetail() {
     )
 
   const { course, modules, duration, lessonCount } = bundle
-  const firstLesson = modules.flatMap((module) => module.lessons)[0]
-  const action = () => {
-    if (enrolled) return navigate(`/app/curso/${course.slug}`)
-    if (!user) return navigate(`/entrar?redirect=${encodeURIComponent(`/checkout/${course.slug}`)}`)
+
+  // Redireciona para o cadastro se não estiver logado, ou checkout/área do aluno
+  const handleCtaClick = () => {
+    if (enrolled) {
+      navigate(`/app/curso/${course.slug}`)
+      return
+    }
+    if (!user) {
+      navigate(`/cadastro?redirect=${encodeURIComponent(`/checkout/${course.slug}`)}`)
+      return
+    }
     navigate(`/checkout/${course.slug}`)
   }
 
+  // Gera de 3 a 5 itens práticos para "O que você vai aprender"
+  const learningItems = (() => {
+    const list: string[] = []
+
+    // 1. Tentar pegar títulos significativos dos módulos
+    for (const mod of modules) {
+      if (mod.title && !list.includes(mod.title)) {
+        list.push(mod.title)
+      }
+      if (list.length >= 5) break
+    }
+
+    // 2. Se tiver menos que 3, tentar completar com títulos de aulas
+    if (list.length < 3) {
+      for (const mod of modules) {
+        for (const lesson of mod.lessons) {
+          if (lesson.title && !list.includes(lesson.title)) {
+            list.push(lesson.title)
+          }
+          if (list.length >= 4) break
+        }
+        if (list.length >= 4) break
+      }
+    }
+
+    // 3. Fallbacks contextualizados se ainda faltarem itens
+    const defaults = [
+      'Visão estratégica e prática aplicada ao seu dia a dia profissional',
+      'Métodos comprovados e sem rodeios para tomada de decisão ágil',
+      'Passo a passo organizado para executar e mensurar seus resultados',
+      'Comunicação assertiva e postura de liderança no novo mercado',
+    ]
+
+    for (const item of defaults) {
+      if (list.length >= 4) break
+      if (!list.includes(item)) {
+        list.push(item)
+      }
+    }
+
+    return list.slice(0, 5)
+  })()
+
   return (
-    <div className="route-page pb-24 sm:pb-0">
+    <div className="route-page pb-28 sm:pb-24">
+      {/* Hero do Curso */}
       <section className="relative overflow-hidden bg-brand-navy py-14 text-white sm:py-20">
         <div className="orange-glow absolute -right-28 top-[-200px] h-[600px] w-[600px]" />
         <div className="container-site relative grid items-center gap-10 lg:grid-cols-[1.08fr_.92fr]">
@@ -81,31 +135,33 @@ export default function CourseDetail() {
             <div className="eyebrow">
               <Sparkles className="h-4 w-4" /> Curso · {course.category}
             </div>
-            <h1 className="mt-5 text-4xl font-extrabold tracking-[-.05em] sm:text-6xl">
+            <h1 className="mt-5 text-4xl font-extrabold tracking-[-.05em] sm:text-5xl lg:text-6xl">
               {course.title}
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/68">{course.subtitle}</p>
-            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/60">
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/80">
+              {course.subtitle || course.description}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/70">
               <span className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-brand-orange" />
-                {modules.length} módulos
+                {modules.length} {modules.length === 1 ? 'módulo' : 'módulos'}
               </span>
               <span className="flex items-center gap-2">
                 <Play className="h-4 w-4 text-brand-orange" />
-                {lessonCount} aulas
+                {lessonCount} {lessonCount === 1 ? 'aula' : 'aulas'}
               </span>
               <span className="flex items-center gap-2">
                 <Clock3 className="h-4 w-4 text-brand-orange" />
                 {formatDuration(duration)}
               </span>
             </div>
-            <div className="mt-9 flex items-center gap-5">
+            <div className="mt-9 flex flex-wrap items-center gap-5">
               <strong className="text-4xl font-extrabold">{formatPrice(course.price)}</strong>
               <Button
-                onClick={action}
-                className="pill-button bg-brand-orange px-7 hover:bg-brand-orange-dark"
+                onClick={handleCtaClick}
+                className="pill-button bg-brand-orange px-8 text-base font-extrabold shadow-lg hover:bg-brand-orange-dark"
               >
-                {enrolled ? 'Continuar assistindo' : 'Quero me matricular'}{' '}
+                {enrolled ? 'Continuar assistindo' : 'Quero este curso'}{' '}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -117,73 +173,192 @@ export default function CourseDetail() {
           />
         </div>
       </section>
+
+      {/* Conteúdo Principal */}
       <section className="section-space">
-        <div className="container-site grid gap-10 lg:grid-cols-[1fr_340px]">
+        <div className="container-site grid gap-10 lg:grid-cols-[1fr_360px]">
           <div>
-            <div>
+            {/* O que você vai aprender (3 a 5 itens) */}
+            <div className="rounded-3xl border border-brand-border bg-white p-7 sm:p-9 shadow-card">
               <span className="eyebrow">
-                <GraduationCap className="h-4 w-4" /> Conteúdo do curso
+                <Sparkles className="h-4 w-4" /> Objetivos práticos
               </span>
-              <h2 className="section-title mt-3">Um passo claro de cada vez.</h2>
-              <p className="body-muted mt-4 max-w-2xl">{course.description}</p>
+              <h2 className="mt-3 text-2xl font-extrabold text-brand-navy sm:text-3xl">
+                O que você vai aprender
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-brand-muted">
+                Competências diretas e aplicáveis que você dominará ao concluir este treinamento:
+              </p>
+              <div className="mt-6 grid gap-3.5 sm:grid-cols-2">
+                {learningItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 rounded-2xl bg-brand-subtle/80 p-4 transition-colors hover:bg-brand-subtle"
+                  >
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                    <span className="text-sm font-bold text-brand-navy leading-snug">{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <Accordion type="multiple" defaultValue={[modules[0]?.id]} className="mt-9 space-y-4">
-              {modules.map((module, moduleIndex) => (
-                <AccordionItem
-                  key={module.id}
-                  value={module.id}
-                  className="overflow-hidden rounded-2xl border border-brand-border bg-white px-5 shadow-card"
-                >
-                  <AccordionTrigger className="py-5 hover:no-underline">
-                    <div className="text-left">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-brand-orange">
-                        Módulo {moduleIndex + 1}
-                      </span>
-                      <h3 className="mt-1 font-extrabold text-brand-navy">{module.title}</h3>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-4">
-                    <div className="space-y-2">
-                      {module.lessons.map((lesson, index) => (
-                        <div
-                          key={lesson.id}
-                          className="flex items-center gap-3 rounded-xl border border-transparent p-3 hover:border-brand-border hover:bg-brand-subtle"
-                        >
-                          <span
-                            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${lesson.is_free ? 'bg-brand-orange text-white' : 'bg-brand-subtle text-brand-muted'}`}
-                          >
-                            {lesson.is_free ? (
-                              <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
-                            ) : (
-                              <span className="text-xs font-extrabold">{index + 1}</span>
-                            )}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-bold text-brand-navy">
-                              {lesson.title}
-                            </p>
-                            <p className="mt-0.5 text-xs text-brand-muted">
-                              {lesson.duration_min} min {lesson.is_free && '· Aula gratuita'}
-                            </p>
+
+            {/* Descrição Completa do Curso */}
+            {course.description && (
+              <div className="mt-10 rounded-3xl border border-brand-border bg-white p-7 sm:p-9 shadow-card">
+                <span className="eyebrow">
+                  <GraduationCap className="h-4 w-4" /> Sobre o treinamento
+                </span>
+                <h2 className="mt-3 text-2xl font-extrabold text-brand-navy">Descrição</h2>
+                <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-brand-muted">
+                  {course.description}
+                </p>
+              </div>
+            )}
+
+            {/* Lista de Módulos com Duração de Cada Um e Status Liberado/Cadeado */}
+            <div className="mt-10">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <span className="eyebrow">
+                    <BookOpen className="h-4 w-4" /> Estrutura do curso
+                  </span>
+                  <h2 className="section-title mt-2">Módulos e Aulas</h2>
+                  <p className="body-muted mt-1 max-w-2xl">
+                    O 1º módulo está aberto para demonstração. Os demais módulos são liberados após
+                    a confirmação da compra.
+                  </p>
+                </div>
+                <div className="text-xs font-semibold text-brand-muted">
+                  {modules.length} {modules.length === 1 ? 'módulo' : 'módulos'} · {lessonCount}{' '}
+                  {lessonCount === 1 ? 'aula' : 'aulas'}
+                </div>
+              </div>
+
+              <Accordion
+                type="multiple"
+                defaultValue={modules.length > 0 ? [modules[0].id] : []}
+                className="mt-6 space-y-4"
+              >
+                {modules.map((module, moduleIndex) => {
+                  const isUnlocked = enrolled || moduleIndex === 0
+                  const moduleDuration = module.lessons.reduce(
+                    (total, l) => total + Number(l.duration_min || 0),
+                    0,
+                  )
+
+                  return (
+                    <AccordionItem
+                      key={module.id}
+                      value={module.id}
+                      className={`overflow-hidden rounded-2xl border transition-all ${
+                        isUnlocked
+                          ? 'border-brand-border bg-white shadow-card'
+                          : 'border-brand-border/70 bg-stone-50/70 opacity-95'
+                      }`}
+                    >
+                      <AccordionTrigger className="px-5 py-5 hover:no-underline">
+                        <div className="flex flex-1 items-start justify-between gap-4 text-left pr-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-extrabold uppercase tracking-wider text-brand-orange">
+                                Módulo {moduleIndex + 1}
+                              </span>
+                              {isUnlocked ? (
+                                <Badge
+                                  variant="outline"
+                                  className="border-emerald-300 bg-emerald-50 text-[11px] font-bold text-emerald-700"
+                                >
+                                  <Unlock className="mr-1 h-3 w-3 text-emerald-600" /> Liberado
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="border-stone-200 bg-stone-100 text-[11px] font-bold text-stone-600"
+                                >
+                                  <Lock className="mr-1 h-3 w-3 text-stone-500" /> Liberado após a
+                                  compra
+                                </Badge>
+                              )}
+                            </div>
+                            <h3 className="mt-1 text-base font-extrabold text-brand-navy sm:text-lg">
+                              {module.title}
+                            </h3>
                           </div>
-                          {lesson.is_free ? (
-                            <button
-                              onClick={() => setPreview(lesson)}
-                              className="rounded-full px-3 py-1.5 text-xs font-extrabold text-brand-orange hover:bg-brand-orange/10"
-                            >
-                              Assistir
-                            </button>
+                          <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                            <span className="flex items-center gap-1 text-xs font-bold text-brand-muted">
+                              <Clock3 className="h-3.5 w-3.5 text-brand-orange" />
+                              {formatDuration(moduleDuration)}
+                            </span>
+                            <span className="text-[11px] text-brand-muted">
+                              {module.lessons.length}{' '}
+                              {module.lessons.length === 1 ? 'aula' : 'aulas'}
+                            </span>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-5 pb-5 pt-1">
+                        <div className="space-y-2 border-t border-brand-border/50 pt-3">
+                          {module.lessons.length === 0 ? (
+                            <p className="py-2 text-xs italic text-brand-muted">
+                              Aulas sendo preparadas para este módulo.
+                            </p>
                           ) : (
-                            <Lock className="h-4 w-4 text-brand-muted/50" />
+                            module.lessons.map((lesson, lessonIdx) => {
+                              const canPreview = isUnlocked && (lesson.is_free || moduleIndex === 0)
+                              return (
+                                <div
+                                  key={lesson.id}
+                                  className="flex items-center gap-3 rounded-xl border border-transparent p-3 transition hover:border-brand-border hover:bg-brand-subtle"
+                                >
+                                  <span
+                                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                                      lesson.is_free
+                                        ? 'bg-brand-orange text-white'
+                                        : isUnlocked
+                                          ? 'bg-brand-subtle text-brand-navy'
+                                          : 'bg-stone-200 text-stone-500'
+                                    }`}
+                                  >
+                                    {lesson.is_free ? (
+                                      <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
+                                    ) : (
+                                      lessonIdx + 1
+                                    )}
+                                  </span>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-bold text-brand-navy">
+                                      {lesson.title}
+                                    </p>
+                                    <p className="mt-0.5 text-xs text-brand-muted">
+                                      {lesson.duration_min} min
+                                      {lesson.is_free && ' · Aula gratuita de degustação'}
+                                      {!isUnlocked && ' · Bloqueado'}
+                                    </p>
+                                  </div>
+                                  {canPreview ? (
+                                    <button
+                                      onClick={() => setPreview(lesson)}
+                                      className="rounded-full px-3 py-1.5 text-xs font-extrabold text-brand-orange hover:bg-brand-orange/10"
+                                    >
+                                      Assistir
+                                    </button>
+                                  ) : (
+                                    <Lock className="h-4 w-4 shrink-0 text-brand-muted/50" />
+                                  )}
+                                </div>
+                              )
+                            })
                           )}
                         </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-            <div className="mt-14 grid gap-6 sm:grid-cols-2">
+                      </AccordionContent>
+                    </AccordionItem>
+                  )
+                })}
+              </Accordion>
+            </div>
+
+            {/* Mentor e Para quem é */}
+            <div className="mt-12 grid gap-6 sm:grid-cols-2">
               <div className="surface-card p-7">
                 <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange/10 text-brand-orange">
                   <UsersRound className="h-5 w-5" />
@@ -199,7 +374,7 @@ export default function CourseDetail() {
                     'Quem busca um plano prático e possível de executar',
                   ].map((item) => (
                     <li key={item} className="flex gap-2">
-                      <Check className="mt-1 h-4 w-4 shrink-0 text-green-600" />
+                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-600" />
                       {item}
                     </li>
                   ))}
@@ -225,46 +400,58 @@ export default function CourseDetail() {
               </div>
             </div>
           </div>
+
+          {/* Coluna Lateral Desktop (Sticky com Botão Quero este curso) */}
           <aside className="hidden lg:block">
-            <div className="surface-card sticky top-28 overflow-hidden">
+            <div className="surface-card sticky top-28 overflow-hidden border border-brand-border shadow-xl">
               <CourseCover course={course} className="aspect-video" />
               <div className="p-6">
-                <p className="text-sm text-brand-muted">Investimento</p>
+                <span className="rounded-full bg-brand-orange/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-orange">
+                  Acesso Completo
+                </span>
+                <p className="mt-3 text-sm text-brand-muted">Investimento único</p>
                 <strong className="mt-1 block text-3xl font-extrabold text-brand-navy">
                   {formatPrice(course.price)}
                 </strong>
                 <p className="mt-2 text-xs text-brand-muted">
-                  Checkout demonstrativo · acesso liberado após confirmação
+                  1º módulo liberado imediatamente · liberação integral dos demais após a compra
                 </p>
                 <Button
-                  onClick={action}
-                  className="pill-button mt-6 w-full bg-brand-orange hover:bg-brand-orange-dark"
+                  onClick={handleCtaClick}
+                  className="pill-button mt-6 w-full bg-brand-orange py-6 text-base font-extrabold hover:bg-brand-orange-dark shadow-md"
                 >
-                  {enrolled ? 'Continuar assistindo' : 'Quero me matricular'}{' '}
+                  {enrolled ? 'Continuar assistindo' : 'Quero este curso'}{' '}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <div className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-brand-muted">
-                  <ShieldCheck className="h-4 w-4 text-green-600" />
-                  Acesso imediato e seguro
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  Garantia e acesso imediato
                 </div>
               </div>
             </div>
           </aside>
         </div>
       </section>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-border bg-white/95 p-3 shadow-[0_-8px_30px_rgba(16,24,40,.12)] backdrop-blur lg:hidden">
+
+      {/* Barra Fixa Mobile com Botão "Quero este curso" */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-border bg-white/95 p-3.5 shadow-[0_-8px_30px_rgba(16,24,40,.12)] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
-          <strong className="text-xl font-extrabold text-brand-navy">
-            {formatPrice(course.price)}
-          </strong>
+          <div>
+            <span className="text-[11px] font-bold text-brand-muted block">Investimento</span>
+            <strong className="text-xl font-extrabold text-brand-navy">
+              {formatPrice(course.price)}
+            </strong>
+          </div>
           <Button
-            onClick={action}
-            className="pill-button flex-1 bg-brand-orange hover:bg-brand-orange-dark"
+            onClick={handleCtaClick}
+            className="pill-button flex-1 bg-brand-orange py-5 text-sm font-extrabold hover:bg-brand-orange-dark shadow-md"
           >
-            {enrolled ? 'Continuar' : 'Quero me matricular'} <ArrowRight className="ml-2 h-4 w-4" />
+            {enrolled ? 'Continuar' : 'Quero este curso'} <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      {/* Modal de Preview de Aula */}
       <Dialog open={Boolean(preview)} onOpenChange={(open) => !open && setPreview(null)}>
         <DialogContent className="max-w-3xl rounded-3xl p-0 overflow-hidden">
           <div className="aspect-video bg-brand-navy">

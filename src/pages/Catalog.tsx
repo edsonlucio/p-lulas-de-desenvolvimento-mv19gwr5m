@@ -14,12 +14,7 @@ import { CourseCover } from '@/components/CourseCover'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingScreen } from '@/components/LoadingScreen'
 import type { CourseCategory, CourseRecord } from '@/lib/types'
-import {
-  formatDuration,
-  formatPrice,
-  getCourseCounts,
-  listPublishedCourses,
-} from '@/services/courses'
+import { formatPrice, getCourseCounts, listPublishedCourses } from '@/services/courses'
 
 const filters: Array<{ label: string; value: 'todos' | CourseCategory }> = [
   { label: 'Todos', value: 'todos' },
@@ -119,13 +114,15 @@ export default function Catalog() {
                       <h2 className="mt-4 text-xl font-extrabold text-brand-navy">
                         {course.title}
                       </h2>
-                      <p className="mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-brand-muted">
-                        {course.subtitle}
+                      {/* Exatamente uma linha de descrição */}
+                      <p className="mt-2 truncate text-sm leading-6 text-brand-muted">
+                        {course.subtitle || course.description}
                       </p>
+                      {/* Total de módulos e aulas */}
                       <p className="mt-5 flex items-center gap-2 text-xs font-semibold text-brand-muted">
                         <BookOpen className="h-4 w-4 text-brand-orange" />
-                        {meta?.modules ?? 0} módulos · {meta?.lessons ?? 0} aulas ·{' '}
-                        {formatDuration(meta?.duration ?? 0)}
+                        {meta?.modules ?? 0} {meta?.modules === 1 ? 'módulo' : 'módulos'} ·{' '}
+                        {meta?.lessons ?? 0} {meta?.lessons === 1 ? 'aula' : 'aulas'}
                       </p>
                       <div className="mt-6 flex items-center justify-between border-t border-brand-border pt-5">
                         <strong className="text-2xl font-extrabold text-brand-navy">
@@ -133,11 +130,10 @@ export default function Catalog() {
                         </strong>
                         <Button
                           asChild
-                          variant="ghost"
-                          className="pill-button text-brand-orange hover:bg-brand-orange/10 hover:text-brand-orange-dark"
+                          className="pill-button bg-brand-orange px-5 text-sm font-extrabold text-white shadow-sm hover:bg-brand-orange-dark"
                         >
                           <Link to={`/cursos/${course.slug}`}>
-                            Ver detalhes <ArrowRight className="ml-2 h-4 w-4" />
+                            Conhecer <ArrowRight className="ml-1.5 h-4 w-4" />
                           </Link>
                         </Button>
                       </div>

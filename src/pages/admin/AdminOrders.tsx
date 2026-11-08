@@ -682,6 +682,7 @@ export default function AdminOrders() {
                 onClick={() => void handleTestResend()}
                 disabled={testingResend}
                 className="rounded-xl text-xs bg-white text-brand-navy hover:bg-brand-surface"
+                title="Disparar teste do conector Resend para validar envio"
               >
                 <Sparkles
                   className={`mr-1.5 h-3.5 w-3.5 text-brand-orange ${testingResend ? 'animate-spin' : ''}`}

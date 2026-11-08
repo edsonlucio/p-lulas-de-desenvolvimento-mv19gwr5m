@@ -102,6 +102,7 @@ routerAdd(
 
     const DEFAULT_SENDER = 'Pílulas de Desenvolvimento <onboarding@resend.dev>'
     const data = e.requestInfo().body || {}
+    // Destinatário padrão validado para o e-mail do mentor
     const testRecipient = data.recipient || 'edsonlucio@gmail.com'
     const testSubject = data.subject || 'Teste de Conexão Resend — Pílulas de Desenvolvimento'
     const testHtml =

@@ -670,7 +670,7 @@ export default function AdminOrders() {
                 </h2>
                 <span className="text-xs text-brand-muted">
                   Auditoria de envios de recuperação de senha e confirmação de pedidos (
-                  {emailLogs.length} registros recentes) · Modo Owner (Conectores)
+                  {emailLogs.length} registros recentes) · Conector Owner Resend
                 </span>
               </div>
             </div>

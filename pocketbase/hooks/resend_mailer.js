@@ -102,7 +102,7 @@ routerAdd(
 
     const DEFAULT_SENDER = 'Pílulas de Desenvolvimento <onboarding@resend.dev>'
     const data = e.requestInfo().body || {}
-    const testRecipient = data.recipient || 'delivered@resend.dev'
+    const testRecipient = data.recipient || 'edsonlucio@gmail.com'
     const testSubject = data.subject || 'Teste de Conexão Resend — Pílulas de Desenvolvimento'
     const testHtml =
       '<p>Este é um teste automático de validação do conector Resend em modo owner na Pílulas de Desenvolvimento.</p>'

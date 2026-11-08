@@ -117,7 +117,7 @@ export default function AdminOrders() {
   async function handleTestResend() {
     setTestingResend(true)
     try {
-      const result = await testResendConnection('delivered@resend.dev')
+      const result = await testResendConnection('edsonlucio@gmail.com')
       if (result.success) {
         toast({
           title: 'E-mail enviado via Resend com sucesso!',

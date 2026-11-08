@@ -668,16 +668,14 @@ export default function Index() {
             </p>
             <div className="mt-9 grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl bg-brand-subtle p-5">
-                <strong className="block text-3xl font-extrabold text-brand-orange">+500</strong>
-                <span className="text-sm font-semibold text-brand-muted">
-                  profissionais treinados
-                </span>
+                <strong className="block text-3xl font-extrabold text-brand-orange">
+                  +2000 profissionais treinados
+                </strong>
               </div>
               <div className="rounded-2xl bg-brand-subtle p-5">
                 <strong className="block text-3xl font-extrabold text-brand-orange">
-                  +10 anos
+                  mais de 37 anos de experiência
                 </strong>
-                <span className="text-sm font-semibold text-brand-muted">de experiência</span>
               </div>
             </div>
           </div>

@@ -11,7 +11,9 @@ import {
   Key,
   Layers,
   LoaderCircle,
+  Mail,
   QrCode,
+  RefreshCw,
   Save,
   ShieldCheck,
   Sparkles,
@@ -31,8 +33,20 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
-import type { CourseRecord, OrderRecord, OrderStatus, UserRecord } from '@/lib/types'
-import { getWebhookConfig, listOrders, updateWebhookConfig } from '@/services/admin'
+import type {
+  CourseRecord,
+  EmailLogRecord,
+  OrderRecord,
+  OrderStatus,
+  UserRecord,
+} from '@/lib/types'
+import {
+  getWebhookConfig,
+  listEmailLogs,
+  listOrders,
+  testResendConnection,
+  updateWebhookConfig,
+} from '@/services/admin'
 import { formatPrice } from '@/services/courses'
 import { confirmOrder } from '@/services/student'
 
@@ -43,9 +57,12 @@ interface ExpandedOrder extends OrderRecord {
 export default function AdminOrders() {
   const { toast } = useToast()
   const [orders, setOrders] = useState<ExpandedOrder[]>([])
+  const [emailLogs, setEmailLogs] = useState<EmailLogRecord[]>([])
   const [filter, setFilter] = useState('todos')
   const [confirming, setConfirming] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadingLogs, setLoadingLogs] = useState(false)
+  const [testingResend, setTestingResend] = useState(false)
 
   // Configuração do Webhook Kiwify
   const [webhookToken, setWebhookToken] = useState('')
@@ -65,11 +82,13 @@ export default function AdminOrders() {
   async function load() {
     setLoading(true)
     try {
-      const [orderList, webhookCfg] = await Promise.all([
+      const [orderList, webhookCfg, logsRes] = await Promise.all([
         listOrders() as Promise<ExpandedOrder[]>,
         getWebhookConfig().catch(() => null),
+        listEmailLogs(30).catch(() => ({ items: [] })),
       ])
       setOrders(orderList)
+      setEmailLogs((logsRes?.items as EmailLogRecord[]) || [])
       if (webhookCfg) {
         setWebhookToken(webhookCfg.token || '')
         setWebhookActive(webhookCfg.is_active ?? true)
@@ -79,6 +98,47 @@ export default function AdminOrders() {
       toast({ title: 'Erro ao carregar pedidos', variant: 'destructive' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function reloadEmailLogs() {
+    setLoadingLogs(true)
+    try {
+      const logsRes = await listEmailLogs(30)
+      setEmailLogs(logsRes?.items || [])
+      toast({ title: 'Logs de e-mail atualizados' })
+    } catch {
+      toast({ title: 'Erro ao carregar logs de e-mail', variant: 'destructive' })
+    } finally {
+      setLoadingLogs(false)
+    }
+  }
+
+  async function handleTestResend() {
+    setTestingResend(true)
+    try {
+      const result = await testResendConnection('delivered@resend.dev')
+      if (result.success) {
+        toast({
+          title: 'E-mail enviado via Resend com sucesso!',
+          description: `Disparado para ${result.recipient} via conector owner.`,
+        })
+      } else {
+        toast({
+          title: 'Retorno da API Resend',
+          description: result.error || 'Verifique o painel do Resend.',
+          variant: result.error?.includes('Refused') ? 'destructive' : 'default',
+        })
+      }
+      await reloadEmailLogs()
+    } catch (err: unknown) {
+      toast({
+        title: 'Erro ao executar teste do Resend',
+        description: err instanceof Error ? err.message : 'Falha na requisição',
+        variant: 'destructive',
+      })
+    } finally {
+      setTestingResend(false)
     }
   }
 
@@ -593,6 +653,129 @@ export default function AdminOrders() {
           {!visible.length && !loading && (
             <div className="p-12 text-center text-sm text-brand-muted">
               Nenhum pedido encontrado neste filtro.
+            </div>
+          )}
+        </div>
+
+        {/* Histórico Real de E-mails Transacionais (email_logs) */}
+        <div className="surface-card overflow-hidden">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-brand-border p-4 bg-brand-subtle/40">
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-orange/10 text-brand-orange">
+                <Mail className="h-4 w-4" />
+              </span>
+              <div>
+                <h2 className="text-sm font-extrabold text-brand-navy">
+                  Histórico de E-mails Transacionais (Resend)
+                </h2>
+                <span className="text-xs text-brand-muted">
+                  Auditoria de envios de recuperação de senha e confirmação de pedidos (
+                  {emailLogs.length} registros recentes)
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleTestResend()}
+                disabled={testingResend}
+                className="rounded-xl text-xs bg-white text-brand-navy hover:bg-brand-surface"
+              >
+                <Sparkles
+                  className={`mr-1.5 h-3.5 w-3.5 text-brand-orange ${testingResend ? 'animate-spin' : ''}`}
+                />
+                {testingResend ? 'Disparando...' : 'Testar Envio Resend'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void reloadEmailLogs()}
+                disabled={loadingLogs}
+                className="rounded-xl text-xs"
+              >
+                <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loadingLogs ? 'animate-spin' : ''}`} />
+                Atualizar logs
+              </Button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Destinatário</th>
+                  <th>Assunto</th>
+                  <th>Detalhes</th>
+                  <th>Status</th>
+                  <th>Data de Envio</th>
+                </tr>
+              </thead>
+              <tbody>
+                {emailLogs.map((log) => {
+                  const isSuccess = log.status === 'enviado' || log.status === 'enviado_resend'
+                  return (
+                    <tr key={log.id}>
+                      <td className="font-mono text-xs font-semibold text-brand-navy">
+                        {log.recipient}
+                      </td>
+                      <td className="text-xs font-medium text-brand-navy">{log.subject}</td>
+                      <td
+                        className="text-xs text-brand-muted max-w-xs truncate"
+                        title={log.content || ''}
+                      >
+                        {log.order_id && (
+                          <span className="font-mono text-[10px] bg-brand-surface px-1.5 py-0.5 rounded mr-1.5 border border-brand-border">
+                            #{log.order_id.slice(0, 8)}
+                          </span>
+                        )}
+                        {log.content || '—'}
+                      </td>
+                      <td>
+                        {isSuccess ? (
+                          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
+                            <Check className="mr-1 h-3 w-3 stroke-[3]" />
+                            Enviado (Resend)
+                          </span>
+                        ) : (
+                          <div className="space-y-0.5">
+                            <span
+                              className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200"
+                              title={log.error || ''}
+                            >
+                              <AlertCircle className="mr-1 h-3 w-3" />
+                              {log.status}
+                            </span>
+                            {log.error && (
+                              <p
+                                className="text-[10px] text-red-600 truncate max-w-[200px]"
+                                title={log.error}
+                              >
+                                {log.error}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="text-xs text-brand-muted">
+                        {log.created
+                          ? new Date(log.created).toLocaleString('pt-BR', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })
+                          : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {!emailLogs.length && (
+            <div className="p-8 text-center text-xs text-brand-muted">
+              Nenhum e-mail transacional registrado ainda na coleção email_logs.
             </div>
           )}
         </div>

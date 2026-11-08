@@ -252,21 +252,37 @@ routerAdd(
         </div>
       `
 
-      // Envio via Resend se disponível ou fallback padrão
+      // Envio via Resend em modo owner, com fallback padrão
+      const DEFAULT_SENDER = 'Pílulas de Desenvolvimento <onboarding@resend.dev>'
       let mailSent = false
       let mailError = ''
 
-      if (typeof globalThis.sendEmailViaResend === 'function') {
-        const resendResult = globalThis.sendEmailViaResend(e.app, {
-          to: buyerEmail,
-          subject: emailSubject,
-          html: emailHtml,
-          orderId: orderId,
-          emailType: 'confirmacao_compra',
-        })
-        mailSent = resendResult.sent
-        mailError = resendResult.error
-      } else {
+      try {
+        if (
+          typeof $connectors !== 'undefined' &&
+          typeof $connectors.executeAsOwner === 'function'
+        ) {
+          const resendResult = $connectors.executeAsOwner('RESEND_SEND_EMAIL', {
+            from: DEFAULT_SENDER,
+            to: [buyerEmail],
+            subject: emailSubject,
+            html: emailHtml,
+          })
+          if (resendResult && resendResult.successful) {
+            mailSent = true
+          } else {
+            mailError =
+              resendResult && resendResult.error
+                ? String(resendResult.error)
+                : 'Conector Resend não retornou sucesso.'
+          }
+        }
+      } catch (rErr) {
+        mailError = rErr ? String(rErr.message || rErr) : 'Erro ao chamar Resend'
+      }
+
+      // Se não enviou via Resend, tenta o Mailer padrão do PocketBase como contingência
+      if (!mailSent) {
         try {
           const senderAddress =
             e.app.settings().meta.senderAddress || 'suporte@pilulasdedesenvolvimento.com.br'
@@ -282,23 +298,25 @@ routerAdd(
           })
           e.app.newMailClient().send(message)
           mailSent = true
-        } catch (err) {
-          mailError = err ? String(err.message || err) : 'Falha no envio de e-mail'
+        } catch (smtpErr) {
+          if (!mailError) {
+            mailError = smtpErr ? String(smtpErr.message || smtpErr) : 'Falha no envio de e-mail'
+          }
         }
-
-        // Registrar histórico em email_logs
-        try {
-          const emailLogsColl = e.app.findCollectionByNameOrId('email_logs')
-          const log = new Record(emailLogsColl)
-          log.set('recipient', buyerEmail)
-          log.set('subject', emailSubject)
-          log.set('content', `Pedido #${orderId} - ${purchasedTitle}`)
-          log.set('status', mailSent ? 'enviado' : 'registrado_sem_smtp')
-          log.set('order_id', orderId)
-          if (mailError) log.set('error', mailError)
-          e.app.save(log)
-        } catch (_) {}
       }
+
+      // Registrar histórico em email_logs
+      try {
+        const emailLogsColl = e.app.findCollectionByNameOrId('email_logs')
+        const log = new Record(emailLogsColl)
+        log.set('recipient', buyerEmail)
+        log.set('subject', emailSubject)
+        log.set('content', `Pedido #${orderId} - ${purchasedTitle}`)
+        log.set('status', mailSent ? 'enviado_resend' : 'erro_envio_resend')
+        log.set('order_id', orderId)
+        if (mailError) log.set('error', mailError)
+        e.app.save(log)
+      } catch (_) {}
     } catch (_) {}
 
     order = e.app.findRecordById('orders', orderId)

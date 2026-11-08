@@ -1,6 +1,7 @@
 import pb from '@/lib/pocketbase/client'
 import type {
   CourseRecord,
+  EmailLogRecord,
   EnrollmentRecord,
   LessonProgressRecord,
   OrderRecord,
@@ -47,6 +48,22 @@ export async function listOrders() {
   return pb
     .collection<OrderRecord>('orders')
     .getFullList({ sort: '-created', expand: 'user,course' })
+}
+
+export async function listEmailLogs(limit = 50) {
+  return pb.collection<EmailLogRecord>('email_logs').getList(1, limit, { sort: '-created' })
+}
+
+export async function testResendConnection(recipient?: string) {
+  return pb.send<{
+    success: boolean
+    error?: string
+    data?: unknown
+    recipient: string
+  }>('/backend/v1/admin/test-resend', {
+    method: 'POST',
+    body: { recipient },
+  })
 }
 
 export async function createModule(courseId: string, title: string, position: number) {
